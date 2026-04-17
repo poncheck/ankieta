@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel rekrutacji – cukru.cafe</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: #f2ede8; color: #1a1a1a; min-height: 100vh; }
+
+    /* ── Login ── */
+    .login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e8e4df;
+      overflow: hidden;
+      width: 100%;
+      max-width: 380px;
+    }
+    .login-header {
+      background: #1a1a1a;
+      padding: 36px 32px;
+      text-align: center;
+    }
+    .login-header img { width: 72px; height: 72px; border-radius: 50%; display: block; margin: 0 auto 16px; }
+    .login-header h1 { color: #f2ede8; font-size: 18px; margin: 0; font-weight: 600; }
+    .login-header p { color: rgba(242,237,232,0.45); font-size: 12px; margin: 6px 0 0; text-transform: uppercase; letter-spacing: .1em; }
+    .login-body { padding: 28px 28px 32px; }
+    .login-body label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #555; }
+    .login-body input {
+      width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 14px; font-family: inherit; background: #fafafa; margin-bottom: 16px;
+      outline: none; transition: border-color .15s;
+    }
+    .login-body input:focus { border-color: #1a1a1a; background: #fff; }
+    .login-btn {
+      width: 100%; padding: 12px; background: #1a1a1a; color: #f2ede8;
+      border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: opacity .15s;
+    }
+    .login-btn:hover { opacity: .85; }
+    .login-err { color: #c0392b; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+
+    /* ── Panel ── */
+    .panel { display: none; min-height: 100vh; }
+
+    .topbar {
+      background: #1a1a1a;
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 14px; }
+    .topbar-left img { width: 36px; height: 36px; border-radius: 50%; }
+    .topbar-left span { color: #f2ede8; font-size: 15px; font-weight: 500; }
+    .topbar-left small { color: rgba(242,237,232,0.45); font-size: 12px; margin-left: 8px; }
+    .logout-btn {
+      background: transparent; border: 1px solid rgba(242,237,232,0.2);
+      color: rgba(242,237,232,0.6); padding: 6px 16px; border-radius: 8px;
+      cursor: pointer; font-size: 13px; font-family: inherit; transition: all .15s;
+    }
+    .logout-btn:hover { border-color: rgba(242,237,232,0.5); color: #f2ede8; }
+
+    .content { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e8e4df;
+      padding: 16px 20px;
+    }
+    .stat-num { font-size: 28px; font-weight: 700; color: #1a1a1a; }
+    .stat-lbl { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+    .search-bar {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e8e4df;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .search-bar input {
+      flex: 1; border: none; outline: none; font-size: 14px;
+      font-family: inherit; background: transparent; color: #1a1a1a;
+    }
+    .search-bar input::placeholder { color: #bbb; }
+
+    .table-wrap {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e8e4df;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: #f7f4f0; }
+    th {
+      padding: 12px 16px; text-align: left;
+      font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+      color: #aaa; font-weight: 600; border-bottom: 1px solid #e8e4df;
+    }
+    td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid #f5f2ef; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr.cand-row { cursor: pointer; transition: background .1s; }
+    tr.cand-row:hover { background: #faf9f7; }
+
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #1a1a1a; color: #f2ede8;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; flex-shrink: 0;
+    }
+    .name-cell { display: flex; align-items: center; gap: 12px; }
+    .name-main { font-weight: 500; }
+    .name-sub { font-size: 12px; color: #aaa; }
+
+    .badge { display: inline-block; background: #f0ede9; border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #666; }
+    .badge.green { background: #e8f5e9; color: #2e7d32; }
+    .badge.blue { background: #e3f2fd; color: #1565c0; }
+
+    .del-btn {
+      background: transparent; border: 1px solid #f0ede9; color: #ccc;
+      padding: 4px 10px; border-radius: 6px; cursor: pointer;
+      font-size: 12px; font-family: inherit; transition: all .15s;
+    }
+    .del-btn:hover { border-color: #e74c3c; color: #e74c3c; background: #fef5f5; }
+
+    .empty { text-align: center; padding: 60px 24px; color: #bbb; font-size: 15px; }
+
+    /* ── Modal kandydata ── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 200;
+      align-items: flex-start; justify-content: center;
+      padding: 40px 16px; overflow-y: auto;
+    }
+    .overlay.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 16px;
+      border: 1px solid #e8e4df; width: 100%; max-width: 680px;
+      overflow: hidden; position: relative;
+      margin: auto;
+    }
+    .modal-hdr {
+      background: #1a1a1a; padding: 24px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-hdr h2 { color: #f2ede8; font-size: 18px; margin: 0; }
+    .modal-hdr small { color: rgba(242,237,232,0.4); font-size: 12px; }
+    .close-btn {
+      background: transparent; border: none; color: rgba(242,237,232,0.5);
+      font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px;
+    }
+    .close-btn:hover { color: #f2ede8; }
+    .modal-body { padding: 24px 28px; max-height: 70vh; overflow-y: auto; }
+    .msec { margin-bottom: 20px; }
+    .msec-title { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: #aaa; font-weight: 600; margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px solid #f0ede9; }
+    .mrow { display: flex; gap: 8px; margin-bottom: 6px; }
+    .mlbl { font-size: 13px; color: #999; min-width: 160px; }
+    .mval { font-size: 13px; color: #1a1a1a; font-weight: 500; }
+    .mans { background: #f7f4f0; border-left: 3px solid #ddd; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 13px; line-height: 1.6; color: #333; margin-bottom: 10px; }
+    .mq { font-size: 11px; color: #bbb; margin-bottom: 4px; }
+    .mbadge { display: inline-block; background: #f0ede9; border-radius: 4px; padding: 2px 8px; font-size: 12px; margin: 2px; color: #666; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <div class="login-header">
+      <img src="/logo.png" alt="cukru.cafe">
+      <h1>Panel rekrutacji</h1>
+      <p>cukru.cafe</p>
+    </div>
+    <div class="login-body">
+      <label>Login</label>
+      <input type="text" id="login-user" placeholder="nazwa użytkownika" autocomplete="username">
+      <label>Hasło</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+      <button class="login-btn" onclick="doLogin()">Zaloguj się</button>
+      <div class="login-err" id="login-err">Nieprawidłowy login lub hasło</div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div class="panel" id="panel">
+  <div class="topbar">
+    <div class="topbar-left">
+      <img src="/logo.png" alt="cukru">
+      <span>Panel rekrutacji</span>
+      <small id="cand-count-top"></small>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Wyloguj</button>
+  </div>
+
+  <div class="content">
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-lbl">Wszystkich zgłoszeń</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-today">0</div>
+        <div class="stat-lbl">Dzisiaj</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-eng">0</div>
+        <div class="stat-lbl">Angielski komunikatywny+</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-exp">0</div>
+        <div class="stat-lbl">Z dośw. ekspresu</div>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <span style="color:#bbb;font-size:16px">&#128269;</span>
+      <input type="text" id="search" placeholder="Szukaj po imieniu, emailu, mieście..." oninput="renderTable()">
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Kandydat</th>
+            <th>Kontakt</th>
+            <th>Okres pracy</th>
+            <th>Angielski</th>
+            <th>Data zgłoszenia</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="empty" style="display:none">Brak zgłoszeń</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-hdr">
+      <div>
+        <h2 id="modal-name"></h2>
+        <small id="modal-date"></small>
+      </div>
+      <button class="close-btn" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+let allCandidates = [];
+const poziom = v => ({'1':'Nie znam','2':'Podstawowy','3':'Komunikatywny','4':'Biegły'}[v] || v);
+const listuj = v => !v ? '—' : Array.isArray(v) ? v.join(', ') : v;
+const initials = name => name.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+const fmtDate = iso => new Date(iso).toLocaleString('pl-PL', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const isToday = iso => new Date(iso).toDateString() === new Date().toDateString();
+
+async function doLogin() {
+  const u = document.getElementById('login-user').value;
+  const p = document.getElementById('login-pass').value;
+  const r = await fetch('/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:u, password:p}) });
+  if (r.ok) { showPanel(); }
+  else { document.getElementById('login-err').style.display = 'block'; }
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+async function doLogout() {
+  await fetch('/admin/logout', { method:'POST' });
+  location.reload();
+}
+
+async function checkAuth() {
+  const r = await fetch('/admin/check');
+  const d = await r.json();
+  if (d.loggedIn) showPanel();
+}
+
+async function showPanel() {
+  document.getElementById('login-wrap').style.display = 'none';
+  document.getElementById('panel').style.display = 'block';
+  await loadCandidates();
+}
+
+async function loadCandidates() {
+  const r = await fetch('/admin/candidates');
+  if (!r.ok) return;
+  allCandidates = await r.json();
+  updateStats();
+  renderTable();
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = allCandidates.length;
+  document.getElementById('stat-today').textContent = allCandidates.filter(c => isToday(c.submittedAt)).length;
+  document.getElementById('stat-eng').textContent = allCandidates.filter(c => parseInt(c.angielski) >= 3).length;
+  document.getElementById('stat-exp').textContent = allCandidates.filter(c => {
+    const u = listuj(c.umiejetnosci_lista);
+    return u.includes('ekspres') || u.includes('ciśnieniowego');
+  }).length;
+  document.getElementById('cand-count-top').textContent = `(${allCandidates.length} zgłoszeń)`;
+}
+
+function renderTable() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const filtered = allCandidates.filter(c =>
+    !q || c.imie_nazwisko?.toLowerCase().includes(q) ||
+    c.email?.toLowerCase().includes(q) ||
+    c.o_sobie?.toLowerCase().includes(q)
+  );
+
+  const tbody = document.getElementById('tbody');
+  document.getElementById('empty').style.display = filtered.length ? 'none' : 'block';
+
+  tbody.innerHTML = filtered.map(c => {
+    const eng = parseInt(c.angielski) || 0;
+    const engBadge = eng >= 3
+      ? `<span class="badge green">${poziom(c.angielski)}</span>`
+      : `<span class="badge">${poziom(c.angielski)}</span>`;
+    return `
+      <tr class="cand-row" onclick="openModal(${c.id})">
+        <td>
+          <div class="name-cell">
+            <div class="avatar">${initials(c.imie_nazwisko||'?')}</div>
+            <div>
+              <div class="name-main">${c.imie_nazwisko}</div>
+              <div class="name-sub">${c.wiek} lat &middot; ${c.student === 'Tak' ? 'student' : 'nie student'}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div>${c.email}</div>
+          <div style="font-size:12px;color:#aaa">${c.telefon}</div>
+        </td>
+        <td><span class="badge">${c.okres || '—'}</span></td>
+        <td>${engBadge}</td>
+        <td style="font-size:13px;color:#888">${fmtDate(c.submittedAt)}</td>
+        <td onclick="event.stopPropagation()">
+          <button class="del-btn" onclick="deleteCandidate(${c.id})">Usuń</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function openModal(id) {
+  const c = allCandidates.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('modal-name').textContent = c.imie_nazwisko;
+  document.getElementById('modal-date').textContent = 'Zgłoszenie: ' + fmtDate(c.submittedAt);
+
+  const umiej = listuj(c.umiejetnosci_lista);
+  const dysp = listuj(c.dyspozycyjnosc);
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="msec">
+      <div class="msec-title">Dane kontaktowe</div>
+      <div class="mrow"><span class="mlbl">Telefon</span><span class="mval">${c.telefon}</span></div>
+      <div class="mrow"><span class="mlbl">E-mail</span><span class="mval">${c.email}</span></div>
+      <div class="mrow"><span class="mlbl">Wiek</span><span class="mval">${c.wiek} lat</span></div>
+      <div class="mrow"><span class="mlbl">Uczeń / student</span><span class="mval">${c.student}</span></div>
+      ${c.szkola ? `<div class="mrow"><span class="mlbl">Szkoła / uczelnia</span><span class="mval">${c.szkola}</span></div>` : ''}
+    </div>
+    <div class="msec">
+      <div class="msec-title">Motywacja</div>
+      <div class="mq">O sobie i dlaczego cukru.cafe</div><div class="mans">${c.o_sobie}</div>
+      <div class="mq">Co lubi w pracy z ludźmi</div><div class="mans">${c.praca_z_ludzmi}</div>
+    </div>
+    <div class="msec">
+      <div class="msec-title">Doświadczenie</div>
+      <div class="mans">${c.doswiadczenie || '—'}</div>
+      <div>${umiej !== '—' ? umiej.split(',').map(u=>`<span class="mbadge">${u.trim()}</span>`).join('') : '—'}</div>
+    </div>
+    <div class="msec">
+      <div class="msec-title">Dostępność</div>
+      <div class="mrow"><span class="mlbl">Okres</span><span class="mval">${c.okres}</span></div>
+      <div class="mrow"><span class="mlbl">Godziny tygodniowo</span><span class="mval">${c.godziny}</span></div>
+      <div class="mrow"><span class="mlbl">Preferowane godziny</span><span class="mval">${listuj(c.preferowane_godziny)}</span></div>
+      ${c.ograniczenia ? `<div class="mq">Ograniczenia</div><div class="mans">${c.ograniczenia}</div>` : ''}
+      <div style="margin-top:8px">${dysp !== '—' ? dysp.split(',').map(u=>`<span class="mbadge">${u.trim()}</span>`).join('') : '—'}</div>
+    </div>
+    <div class="msec">
+      <div class="msec-title">Języki obce</div>
+      <div class="mrow"><span class="mlbl">Angielski</span><span class="mval">${poziom(c.angielski)}</span></div>
+      <div class="mrow"><span class="mlbl">Niemiecki</span><span class="mval">${poziom(c.niemiecki)}</span></div>
+      <div class="mrow"><span class="mlbl">Czeski</span><span class="mval">${poziom(c.czeski)}</span></div>
+    </div>
+    <div class="msec">
+      <div class="msec-title">Zadania kreatywne</div>
+      <div class="mq">Propozycja napoju sezonowego</div><div class="mans">${c.napoj}</div>
+      <div class="mq">Klient niezadowolony z kawy</div><div class="mans">${c.sytuacja_kawa}</div>
+      <div class="mq">Klient czekający na śniadanie</div><div class="mans">${c.sytuacja_sniadanie}</div>
+    </div>
+    ${c.dodatkowe ? `<div class="msec"><div class="msec-title">Dodatkowe informacje</div><div class="mans">${c.dodatkowe}</div></div>` : ''}
+    <div class="msec">
+      <div class="mrow"><span class="mlbl">Źródło ogłoszenia</span><span class="mval">${c.zrodlo || '—'}</span></div>
+    </div>`;
+
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('overlay')) {
+    document.getElementById('overlay').classList.remove('open');
+  }
+}
+
+async function deleteCandidate(id) {
+  if (!confirm('Usunąć to zgłoszenie? Tej operacji nie można cofnąć.')) return;
+  await fetch(`/admin/candidates/${id}`, { method: 'DELETE' });
+  await loadCandidates();
+}
+
+checkAuth();
+</script>
+</body>
+</html>
