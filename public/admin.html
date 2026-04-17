@@ -8,179 +8,144 @@
     *, *::before, *::after { box-sizing: border-box; }
     body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: #f2ede8; color: #1a1a1a; min-height: 100vh; }
 
-    /* ── Login ── */
-    .login-wrap {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .login-card {
-      background: #fff;
-      border-radius: 16px;
-      border: 1px solid #e8e4df;
-      overflow: hidden;
-      width: 100%;
-      max-width: 380px;
-    }
-    .login-header {
-      background: #1a1a1a;
-      padding: 36px 32px;
-      text-align: center;
-    }
-    .login-header img { width: 72px; height: 72px; border-radius: 50%; display: block; margin: 0 auto 16px; }
-    .login-header h1 { color: #f2ede8; font-size: 18px; margin: 0; font-weight: 600; }
-    .login-header p { color: rgba(242,237,232,0.45); font-size: 12px; margin: 6px 0 0; text-transform: uppercase; letter-spacing: .1em; }
+    /* Login */
+    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .login-card { background: #fff; border-radius: 16px; border: 1px solid #e8e4df; overflow: hidden; width: 100%; max-width: 380px; }
+    .login-hdr { background: #1a1a1a; padding: 36px 32px; text-align: center; }
+    .login-hdr img { width: 72px; height: 72px; border-radius: 50%; display: block; margin: 0 auto 16px; }
+    .login-hdr h1 { color: #f2ede8; font-size: 18px; margin: 0; font-weight: 600; }
+    .login-hdr p { color: rgba(242,237,232,0.45); font-size: 12px; margin: 6px 0 0; text-transform: uppercase; letter-spacing: .1em; }
     .login-body { padding: 28px 28px 32px; }
     .login-body label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #555; }
-    .login-body input {
-      width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
-      font-size: 14px; font-family: inherit; background: #fafafa; margin-bottom: 16px;
-      outline: none; transition: border-color .15s;
-    }
-    .login-body input:focus { border-color: #1a1a1a; background: #fff; }
-    .login-btn {
-      width: 100%; padding: 12px; background: #1a1a1a; color: #f2ede8;
-      border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
-      cursor: pointer; font-family: inherit; transition: opacity .15s;
-    }
+    .login-body input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; background: #fafafa; margin-bottom: 16px; outline: none; }
+    .login-body input:focus { border-color: #1a1a1a; }
+    .login-btn { width: 100%; padding: 12px; background: #1a1a1a; color: #f2ede8; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
     .login-btn:hover { opacity: .85; }
-    .login-err { color: #c0392b; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+    .err { color: #c0392b; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
 
-    /* ── Panel ── */
-    .panel { display: none; min-height: 100vh; }
-
-    .topbar {
-      background: #1a1a1a;
-      padding: 0 28px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .topbar-left { display: flex; align-items: center; gap: 14px; }
-    .topbar-left img { width: 36px; height: 36px; border-radius: 50%; }
+    /* Layout */
+    .panel { display: none; }
+    .topbar { background: #1a1a1a; padding: 0 24px; height: 58px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-left img { width: 34px; height: 34px; border-radius: 50%; }
     .topbar-left span { color: #f2ede8; font-size: 15px; font-weight: 500; }
-    .topbar-left small { color: rgba(242,237,232,0.45); font-size: 12px; margin-left: 8px; }
-    .logout-btn {
-      background: transparent; border: 1px solid rgba(242,237,232,0.2);
-      color: rgba(242,237,232,0.6); padding: 6px 16px; border-radius: 8px;
-      cursor: pointer; font-size: 13px; font-family: inherit; transition: all .15s;
-    }
-    .logout-btn:hover { border-color: rgba(242,237,232,0.5); color: #f2ede8; }
+    .logout-btn { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.55); padding: 5px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
+    .logout-btn:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
 
-    .content { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid #e8e4df; background: #fff; padding: 0 24px; }
+    .tab { padding: 14px 20px; font-size: 14px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; color: #888; transition: all .15s; }
+    .tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+    .tab:hover { color: #1a1a1a; }
+    .tab-badge { background: #f0ede9; border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 6px; color: #888; }
+    .tab.active .tab-badge { background: #1a1a1a; color: #f2ede8; }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .stat {
-      background: #fff;
-      border-radius: 10px;
-      border: 1px solid #e8e4df;
-      padding: 16px 20px;
-    }
-    .stat-num { font-size: 28px; font-weight: 700; color: #1a1a1a; }
+    .content { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; margin-bottom: 20px; }
+    .stat { background: #fff; border-radius: 10px; border: 1px solid #e8e4df; padding: 14px 18px; }
+    .stat-num { font-size: 26px; font-weight: 700; }
     .stat-lbl { font-size: 12px; color: #aaa; margin-top: 2px; }
 
-    .search-bar {
-      background: #fff;
-      border-radius: 10px;
-      border: 1px solid #e8e4df;
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .search-bar input {
-      flex: 1; border: none; outline: none; font-size: 14px;
-      font-family: inherit; background: transparent; color: #1a1a1a;
-    }
-    .search-bar input::placeholder { color: #bbb; }
+    /* Buttons */
+    .btn { padding: 8px 18px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 13px; font-family: inherit; color: #333; transition: all .15s; }
+    .btn:hover { background: #f7f4f0; border-color: #bbb; }
+    .btn-dark { background: #1a1a1a; color: #f2ede8; border-color: #1a1a1a; }
+    .btn-dark:hover { opacity: .85; background: #1a1a1a; }
+    .btn-danger { color: #c0392b; border-color: #f5c6c6; }
+    .btn-danger:hover { background: #fef5f5; border-color: #e74c3c; }
+    .btn-green { color: #2e7d32; border-color: #c8e6c9; }
+    .btn-green:hover { background: #f1f8f1; }
 
-    .table-wrap {
-      background: #fff;
-      border-radius: 12px;
-      border: 1px solid #e8e4df;
-      overflow: hidden;
-    }
+    /* Search */
+    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+    .search-input { flex: 1; min-width: 200px; padding: 8px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff; outline: none; }
+    .search-input:focus { border-color: #1a1a1a; }
+
+    /* Table */
+    .table-wrap { background: #fff; border-radius: 12px; border: 1px solid #e8e4df; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; }
     thead { background: #f7f4f0; }
-    th {
-      padding: 12px 16px; text-align: left;
-      font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
-      color: #aaa; font-weight: 600; border-bottom: 1px solid #e8e4df;
-    }
-    td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid #f5f2ef; vertical-align: middle; }
+    th { padding: 11px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #aaa; font-weight: 600; border-bottom: 1px solid #e8e4df; }
+    td { padding: 13px 14px; font-size: 14px; border-bottom: 1px solid #f5f2ef; vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
-    tr.cand-row { cursor: pointer; transition: background .1s; }
-    tr.cand-row:hover { background: #faf9f7; }
-
-    .avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: #1a1a1a; color: #f2ede8;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 600; flex-shrink: 0;
-    }
-    .name-cell { display: flex; align-items: center; gap: 12px; }
+    tr.clickable { cursor: pointer; }
+    tr.clickable:hover { background: #faf9f7; }
+    .empty { text-align: center; padding: 48px; color: #bbb; font-size: 15px; }
+    .badge { display: inline-block; background: #f0ede9; border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #666; }
+    .badge-green { background: #e8f5e9; color: #2e7d32; }
+    .badge-blue { background: #e3f2fd; color: #1565c0; }
+    .badge-default { background: #1a1a1a; color: #f2ede8; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: #1a1a1a; color: #f2ede8; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+    .name-cell { display: flex; align-items: center; gap: 10px; }
     .name-main { font-weight: 500; }
     .name-sub { font-size: 12px; color: #aaa; }
+    .actions { display: flex; gap: 6px; }
 
-    .badge { display: inline-block; background: #f0ede9; border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #666; }
-    .badge.green { background: #e8f5e9; color: #2e7d32; }
-    .badge.blue { background: #e3f2fd; color: #1565c0; }
+    /* Recruitment cards */
+    .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 14px; }
+    .rec-card { background: #fff; border-radius: 12px; border: 1px solid #e8e4df; padding: 20px; position: relative; }
+    .rec-card.is-default { border-color: #1a1a1a; border-width: 2px; }
+    .rec-card-hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .rec-card-title { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+    .rec-card-sub { font-size: 12px; color: #888; }
+    .rec-card-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .rec-card-stats { display: flex; gap: 16px; margin-bottom: 14px; }
+    .rec-stat { font-size: 13px; color: #555; }
+    .rec-stat strong { font-size: 18px; font-weight: 700; display: block; color: #1a1a1a; }
+    .rec-card-actions { display: flex; gap: 6px; flex-wrap: wrap; border-top: 1px solid #f0ede9; padding-top: 12px; }
 
-    .del-btn {
-      background: transparent; border: 1px solid #f0ede9; color: #ccc;
-      padding: 4px 10px; border-radius: 6px; cursor: pointer;
-      font-size: 12px; font-family: inherit; transition: all .15s;
-    }
-    .del-btn:hover { border-color: #e74c3c; color: #e74c3c; background: #fef5f5; }
-
-    .empty { text-align: center; padding: 60px 24px; color: #bbb; font-size: 15px; }
-
-    /* ── Modal kandydata ── */
-    .overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.45); z-index: 200;
-      align-items: flex-start; justify-content: center;
-      padding: 40px 16px; overflow-y: auto;
-    }
+    /* Modal / drawer */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; align-items: flex-start; justify-content: center; padding: 32px 16px; overflow-y: auto; }
     .overlay.open { display: flex; }
-    .modal {
-      background: #fff; border-radius: 16px;
-      border: 1px solid #e8e4df; width: 100%; max-width: 680px;
-      overflow: hidden; position: relative;
-      margin: auto;
-    }
-    .modal-hdr {
-      background: #1a1a1a; padding: 24px 28px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .modal-hdr h2 { color: #f2ede8; font-size: 18px; margin: 0; }
-    .modal-hdr small { color: rgba(242,237,232,0.4); font-size: 12px; }
-    .close-btn {
-      background: transparent; border: none; color: rgba(242,237,232,0.5);
-      font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px;
-    }
-    .close-btn:hover { color: #f2ede8; }
-    .modal-body { padding: 24px 28px; max-height: 70vh; overflow-y: auto; }
-    .msec { margin-bottom: 20px; }
-    .msec-title { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: #aaa; font-weight: 600; margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px solid #f0ede9; }
-    .mrow { display: flex; gap: 8px; margin-bottom: 6px; }
-    .mlbl { font-size: 13px; color: #999; min-width: 160px; }
+    .modal { background: #fff; border-radius: 16px; border: 1px solid #e8e4df; width: 100%; max-width: 680px; overflow: hidden; margin: auto; }
+    .modal-hdr { background: #1a1a1a; padding: 22px 26px; display: flex; align-items: center; justify-content: space-between; }
+    .modal-hdr h2 { color: #f2ede8; font-size: 17px; margin: 0; }
+    .modal-hdr small { color: rgba(242,237,232,0.4); font-size: 12px; display: block; margin-top: 3px; }
+    .close-btn { background: transparent; border: none; color: rgba(255,255,255,.4); font-size: 22px; cursor: pointer; padding: 0 4px; }
+    .close-btn:hover { color: #fff; }
+    .modal-body { padding: 24px 26px; max-height: 72vh; overflow-y: auto; }
+    .msec { margin-bottom: 18px; }
+    .msec-title { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: #aaa; font-weight: 600; margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1px solid #f0ede9; }
+    .mrow { display: flex; gap: 8px; margin-bottom: 5px; }
+    .mlbl { font-size: 13px; color: #999; min-width: 150px; }
     .mval { font-size: 13px; color: #1a1a1a; font-weight: 500; }
-    .mans { background: #f7f4f0; border-left: 3px solid #ddd; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 13px; line-height: 1.6; color: #333; margin-bottom: 10px; }
-    .mq { font-size: 11px; color: #bbb; margin-bottom: 4px; }
+    .mans { background: #f7f4f0; border-left: 3px solid #ddd; padding: 9px 13px; border-radius: 0 6px 6px 0; font-size: 13px; line-height: 1.6; color: #333; margin-bottom: 8px; }
+    .mq { font-size: 11px; color: #bbb; margin-bottom: 3px; }
     .mbadge { display: inline-block; background: #f0ede9; border-radius: 4px; padding: 2px 8px; font-size: 12px; margin: 2px; color: #666; }
+
+    /* Editor drawer */
+    .drawer { display: none; position: fixed; inset: 0; z-index: 300; }
+    .drawer.open { display: flex; }
+    .drawer-backdrop { flex: 1; background: rgba(0,0,0,.4); }
+    .drawer-panel { width: 100%; max-width: 520px; background: #fff; height: 100%; overflow-y: auto; display: flex; flex-direction: column; }
+    .drawer-hdr { background: #1a1a1a; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .drawer-hdr h2 { color: #f2ede8; font-size: 16px; margin: 0; }
+    .drawer-body { padding: 24px; flex: 1; }
+    .drawer-footer { padding: 16px 24px; border-top: 1px solid #f0ede9; display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0; }
+    .form-field { margin-bottom: 18px; }
+    .form-field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #555; }
+    .form-field input, .form-field textarea, .form-field select { width: 100%; padding: 9px 13px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; background: #fafafa; outline: none; }
+    .form-field input:focus, .form-field textarea:focus { border-color: #1a1a1a; background: #fff; }
+    .form-field textarea { min-height: 80px; resize: vertical; line-height: 1.6; }
+    .form-field small { font-size: 12px; color: #aaa; display: block; margin-top: 4px; }
+    .rates-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .duties-list { list-style: none; padding: 0; margin: 0 0 8px; }
+    .duties-list li { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .duties-list li input { flex: 1; }
+    .duties-list li button { background: transparent; border: none; cursor: pointer; color: #ccc; font-size: 16px; padding: 0; }
+    .duties-list li button:hover { color: #e74c3c; }
+    .add-duty-row { display: flex; gap: 8px; }
+    .add-duty-row input { flex: 1; }
+
+    /* Script modal */
+    .script-wrap { background: #1a1a1a; border-radius: 8px; overflow: hidden; }
+    .script-wrap pre { margin: 0; padding: 16px; font-size: 12px; font-family: 'Courier New', monospace; color: #a8d8a8; overflow-x: auto; line-height: 1.5; max-height: 400px; }
+    .script-actions { padding: 10px 14px; border-top: 1px solid rgba(255,255,255,.1); display: flex; justify-content: flex-end; }
+    .copy-code-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: inherit; }
+    .copy-code-btn:hover { background: rgba(255,255,255,.2); }
   </style>
 </head>
 <body>
@@ -188,18 +153,18 @@
 <!-- LOGIN -->
 <div class="login-wrap" id="login-wrap">
   <div class="login-card">
-    <div class="login-header">
+    <div class="login-hdr">
       <img src="/logo.png" alt="cukru.cafe">
       <h1>Panel rekrutacji</h1>
       <p>cukru.cafe</p>
     </div>
     <div class="login-body">
       <label>Login</label>
-      <input type="text" id="login-user" placeholder="nazwa użytkownika" autocomplete="username">
+      <input type="text" id="lu" placeholder="nazwa użytkownika" autocomplete="username">
       <label>Hasło</label>
-      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+      <input type="password" id="lp" placeholder="••••••••" autocomplete="current-password">
       <button class="login-btn" onclick="doLogin()">Zaloguj się</button>
-      <div class="login-err" id="login-err">Nieprawidłowy login lub hasło</div>
+      <div class="err" id="lerr">Nieprawidłowy login lub hasło</div>
     </div>
   </div>
 </div>
@@ -210,229 +175,402 @@
     <div class="topbar-left">
       <img src="/logo.png" alt="cukru">
       <span>Panel rekrutacji</span>
-      <small id="cand-count-top"></small>
     </div>
     <button class="logout-btn" onclick="doLogout()">Wyloguj</button>
   </div>
 
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('recruitments')">Rekrutacje <span class="tab-badge" id="badge-rec">0</span></div>
+    <div class="tab" onclick="switchTab('candidates')">Kandydaci <span class="tab-badge" id="badge-cand">0</span></div>
+  </div>
+
   <div class="content">
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-num" id="stat-total">0</div>
-        <div class="stat-lbl">Wszystkich zgłoszeń</div>
+
+    <!-- TAB: Rekrutacje -->
+    <div class="tab-pane active" id="tab-recruitments">
+      <div class="toolbar">
+        <div style="flex:1;font-size:15px;font-weight:500">Zarządzanie rekrutacjami</div>
+        <button class="btn btn-dark" onclick="openEditor(null)">+ Nowa rekrutacja</button>
       </div>
-      <div class="stat">
-        <div class="stat-num" id="stat-today">0</div>
-        <div class="stat-lbl">Dzisiaj</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" id="stat-eng">0</div>
-        <div class="stat-lbl">Angielski komunikatywny+</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" id="stat-exp">0</div>
-        <div class="stat-lbl">Z dośw. ekspresu</div>
-      </div>
+      <div class="rec-grid" id="rec-grid"></div>
     </div>
 
-    <div class="search-bar">
-      <span style="color:#bbb;font-size:16px">&#128269;</span>
-      <input type="text" id="search" placeholder="Szukaj po imieniu, emailu, mieście..." oninput="renderTable()">
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Kandydat</th>
-            <th>Kontakt</th>
-            <th>Okres pracy</th>
-            <th>Angielski</th>
-            <th>Data zgłoszenia</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-      <div class="empty" id="empty" style="display:none">Brak zgłoszeń</div>
+    <!-- TAB: Kandydaci -->
+    <div class="tab-pane" id="tab-candidates">
+      <div class="stats" id="stats-row"></div>
+      <div class="toolbar">
+        <input type="text" class="search-input" id="search" placeholder="Szukaj kandydata..." oninput="renderCandidates()">
+        <select id="filter-rec" onchange="renderCandidates()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;outline:none">
+          <option value="">Wszystkie rekrutacje</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Kandydat</th><th>Rekrutacja</th><th>Kontakt</th><th>Okres</th><th>Angielski</th><th>Data</th><th></th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="empty" id="empty" style="display:none">Brak kandydatów</div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL -->
-<div class="overlay" id="overlay" onclick="closeModal(event)">
-  <div class="modal" id="modal">
+<!-- MODAL kandydata -->
+<div class="overlay" id="cand-overlay" onclick="if(event.target===this)closeCandModal()">
+  <div class="modal">
     <div class="modal-hdr">
-      <div>
-        <h2 id="modal-name"></h2>
-        <small id="modal-date"></small>
-      </div>
-      <button class="close-btn" onclick="closeModal()">&#x2715;</button>
+      <div><h2 id="cm-name"></h2><small id="cm-date"></small></div>
+      <button class="close-btn" onclick="closeCandModal()">&#x2715;</button>
     </div>
-    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-body" id="cm-body"></div>
+  </div>
+</div>
+
+<!-- MODAL Apps Script -->
+<div class="overlay" id="script-overlay" onclick="if(event.target===this)closeScriptModal()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div><h2>Google Forms – Apps Script</h2><small id="script-rec-name"></small></div>
+      <button class="close-btn" onclick="closeScriptModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:#666;margin:0 0 14px">Skopiuj kod, wklej do <a href="https://script.google.com" target="_blank" style="color:#1a1a1a">script.google.com</a>, wybierz funkcję <code>createRecruitmentForm</code> i uruchom.</p>
+      <div class="script-wrap">
+        <pre id="script-code"></pre>
+        <div class="script-actions">
+          <button class="copy-code-btn" onclick="copyScript()">Kopiuj kod</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER edytor rekrutacji -->
+<div class="drawer" id="editor-drawer">
+  <div class="drawer-backdrop" onclick="closeEditor()"></div>
+  <div class="drawer-panel">
+    <div class="drawer-hdr">
+      <h2 id="editor-title">Nowa rekrutacja</h2>
+      <button class="close-btn" onclick="closeEditor()">&#x2715;</button>
+    </div>
+    <div class="drawer-body">
+      <input type="hidden" id="ed-id">
+      <div class="form-field">
+        <label>Nazwa rekrutacji</label>
+        <input type="text" id="ed-name" placeholder="np. Barista / Obsługa klienta #2">
+      </div>
+      <div class="form-field">
+        <label>Slug (adres URL)</label>
+        <input type="text" id="ed-slug" placeholder="np. barista-2025">
+        <small>Formularz dostępny pod: /r/<strong id="slug-preview">...</strong></small>
+      </div>
+      <div class="form-field">
+        <label>Stanowisko</label>
+        <input type="text" id="ed-jobtitle" placeholder="barista / obsługa klienta">
+      </div>
+      <div class="form-field">
+        <label>Wymiar pracy</label>
+        <input type="text" id="ed-worktype" placeholder="Pełen etat">
+      </div>
+      <div class="form-field">
+        <label>Opis (wyświetlany na formularzu)</label>
+        <textarea id="ed-description" rows="4"></textarea>
+      </div>
+      <div class="form-field">
+        <label>Zakres obowiązków</label>
+        <ul class="duties-list" id="duties-editor"></ul>
+        <div class="add-duty-row">
+          <input type="text" id="new-duty" placeholder="Dodaj obowiązek...">
+          <button class="btn" onclick="addDuty()">Dodaj</button>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Stawki godzinowe netto (zł/h)</label>
+        <div class="rates-row">
+          <div><small>Dzień próbny</small><input type="number" id="ed-rate-trial" value="25"></div>
+          <div><small>Wdrożenie</small><input type="number" id="ed-rate-onboarding" value="27"></div>
+          <div><small>Po wdrożeniu</small><input type="number" id="ed-rate-after" value="30"></div>
+        </div>
+      </div>
+      <div class="form-field">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="ed-active" checked style="width:16px;height:16px;accent-color:#1a1a1a"> Rekrutacja aktywna
+        </label>
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn" onclick="closeEditor()">Anuluj</button>
+      <button class="btn btn-dark" onclick="saveRecruitment()">Zapisz</button>
+    </div>
   </div>
 </div>
 
 <script>
+let recruitments = [];
 let allCandidates = [];
-const poziom = v => ({'1':'Nie znam','2':'Podstawowy','3':'Komunikatywny','4':'Biegły'}[v] || v);
-const listuj = v => !v ? '—' : Array.isArray(v) ? v.join(', ') : v;
-const initials = name => name.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
-const fmtDate = iso => new Date(iso).toLocaleString('pl-PL', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+const poz = v => ({'1':'Nie znam','2':'Podstawowy','3':'Komunikatywny','4':'Biegły'}[v]||v);
+const lst = v => !v?'—':Array.isArray(v)?v.join(', '):v;
+const initials = n => n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+const fmtDate = iso => new Date(iso).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const isToday = iso => new Date(iso).toDateString() === new Date().toDateString();
 
+// ── Auth ──────────────────────────────────────────────────────────
 async function doLogin() {
-  const u = document.getElementById('login-user').value;
-  const p = document.getElementById('login-pass').value;
-  const r = await fetch('/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:u, password:p}) });
-  if (r.ok) { showPanel(); }
-  else { document.getElementById('login-err').style.display = 'block'; }
+  const u = document.getElementById('lu').value, p = document.getElementById('lp').value;
+  const r = await fetch('/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+  if (r.ok) showPanel(); else document.getElementById('lerr').style.display='block';
 }
-
-document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-
-async function doLogout() {
-  await fetch('/admin/logout', { method:'POST' });
-  location.reload();
-}
-
-async function checkAuth() {
-  const r = await fetch('/admin/check');
-  const d = await r.json();
-  if (d.loggedIn) showPanel();
-}
+document.getElementById('lp').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+async function doLogout() { await fetch('/admin/logout',{method:'POST'}); location.reload(); }
+async function checkAuth() { const r=await fetch('/admin/check'),d=await r.json(); if(d.loggedIn) showPanel(); }
 
 async function showPanel() {
-  document.getElementById('login-wrap').style.display = 'none';
-  document.getElementById('panel').style.display = 'block';
-  await loadCandidates();
+  document.getElementById('login-wrap').style.display='none';
+  document.getElementById('panel').style.display='block';
+  await Promise.all([loadRecruitments(), loadCandidates()]);
 }
 
+// ── Tabs ──────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['recruitments','candidates'][i]===name));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ── Rekrutacje ────────────────────────────────────────────────────
+async function loadRecruitments() {
+  const r = await fetch('/admin/recruitments'); recruitments = await r.json();
+  document.getElementById('badge-rec').textContent = recruitments.length;
+  renderRecruitments();
+  // populate filter
+  const sel = document.getElementById('filter-rec');
+  sel.innerHTML = '<option value="">Wszystkie rekrutacje</option>' +
+    recruitments.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
+}
+
+function renderRecruitments() {
+  const grid = document.getElementById('rec-grid');
+  if (!recruitments.length) { grid.innerHTML = '<p style="color:#aaa">Brak rekrutacji. Utwórz pierwszą.</p>'; return; }
+  grid.innerHTML = recruitments.map(rec => `
+    <div class="rec-card ${rec.isDefault?'is-default':''}">
+      <div class="rec-card-hdr">
+        <div>
+          <div class="rec-card-title">${rec.name}</div>
+          <div class="rec-card-sub">${rec.jobTitle} &middot; ${rec.workType}</div>
+        </div>
+      </div>
+      <div class="rec-card-meta">
+        ${rec.isDefault?'<span class="badge badge-default">Domyślna</span>':''}
+        ${rec.active?'<span class="badge badge-green">Aktywna</span>':'<span class="badge">Nieaktywna</span>'}
+        <span class="badge">/r/${rec.slug}</span>
+      </div>
+      <div class="rec-card-stats">
+        <div class="rec-stat"><strong>${rec.candidateCount||0}</strong>kandydatów</div>
+        <div class="rec-stat"><strong>${rec.rates.after} zł</strong>stawka docelowa</div>
+      </div>
+      <div class="rec-card-actions">
+        <button class="btn" onclick="openEditor(${rec.id})">Edytuj</button>
+        <button class="btn btn-green" onclick="showScript(${rec.id})">Apps Script</button>
+        ${!rec.isDefault?`<button class="btn" onclick="setDefault(${rec.id})">Ustaw domyślną</button>`:''}
+        <button class="btn" onclick="window.open('/r/${rec.slug}','_blank')">Podgląd</button>
+        ${!rec.isDefault?`<button class="btn btn-danger" onclick="deleteRecruitment(${rec.id})">Usuń</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+async function setDefault(id) {
+  await fetch(`/admin/recruitments/${id}/default`,{method:'POST'});
+  await loadRecruitments();
+}
+
+async function deleteRecruitment(id) {
+  const rec = recruitments.find(r=>r.id===id);
+  if (!confirm(`Usunąć rekrutację "${rec.name}"? Kandydaci zostaną zachowani.`)) return;
+  await fetch(`/admin/recruitments/${id}`,{method:'DELETE'});
+  await loadRecruitments();
+}
+
+// ── Edytor rekrutacji ─────────────────────────────────────────────
+let editingDuties = [];
+
+function openEditor(id) {
+  const rec = id ? recruitments.find(r=>r.id===id) : null;
+  document.getElementById('editor-title').textContent = rec ? 'Edytuj rekrutację' : 'Nowa rekrutacja';
+  document.getElementById('ed-id').value = rec ? rec.id : '';
+  document.getElementById('ed-name').value = rec ? rec.name : '';
+  document.getElementById('ed-slug').value = rec ? rec.slug : '';
+  document.getElementById('slug-preview').textContent = rec ? rec.slug : '';
+  document.getElementById('ed-jobtitle').value = rec ? rec.jobTitle : 'barista / obsługa klienta';
+  document.getElementById('ed-worktype').value = rec ? rec.workType : 'Pełen etat';
+  document.getElementById('ed-description').value = rec ? rec.description : '';
+  document.getElementById('ed-rate-trial').value = rec ? rec.rates.trial : 25;
+  document.getElementById('ed-rate-onboarding').value = rec ? rec.rates.onboarding : 27;
+  document.getElementById('ed-rate-after').value = rec ? rec.rates.after : 30;
+  document.getElementById('ed-active').checked = rec ? rec.active : true;
+  editingDuties = rec ? [...rec.duties] : [
+    'Obsługa klienta','Organizacja pracy za barem i dbałość o czystość',
+    'Przygotowywanie kaw z wykorzystaniem ekspresu ciśnieniowego',
+    'Przygotowywanie kaw metodami alternatywnymi','Dyspozycyjność – weekendy i święta',
+    'Współpraca przy tworzeniu menu','Znajomość tematu piw kraftowych'
+  ];
+  renderDuties();
+  document.getElementById('editor-drawer').classList.add('open');
+}
+
+function closeEditor() { document.getElementById('editor-drawer').classList.remove('open'); }
+
+document.getElementById('ed-slug').addEventListener('input', e => {
+  document.getElementById('slug-preview').textContent = e.target.value || '...';
+});
+
+function renderDuties() {
+  document.getElementById('duties-editor').innerHTML = editingDuties.map((d,i) => `
+    <li>
+      <input type="text" value="${d}" onchange="editingDuties[${i}]=this.value">
+      <button onclick="editingDuties.splice(${i},1);renderDuties()">&#x2715;</button>
+    </li>`).join('');
+}
+
+function addDuty() {
+  const inp = document.getElementById('new-duty');
+  if (!inp.value.trim()) return;
+  editingDuties.push(inp.value.trim()); inp.value = ''; renderDuties();
+}
+document.getElementById('new-duty').addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();addDuty();} });
+
+async function saveRecruitment() {
+  const id = document.getElementById('ed-id').value;
+  const body = {
+    name: document.getElementById('ed-name').value,
+    slug: document.getElementById('ed-slug').value,
+    jobTitle: document.getElementById('ed-jobtitle').value,
+    workType: document.getElementById('ed-worktype').value,
+    description: document.getElementById('ed-description').value,
+    duties: editingDuties,
+    active: document.getElementById('ed-active').checked,
+    rates: {
+      trial: parseFloat(document.getElementById('ed-rate-trial').value),
+      onboarding: parseFloat(document.getElementById('ed-rate-onboarding').value),
+      after: parseFloat(document.getElementById('ed-rate-after').value)
+    }
+  };
+  const url = id ? `/admin/recruitments/${id}` : '/admin/recruitments';
+  const method = id ? 'PUT' : 'POST';
+  await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  closeEditor(); await loadRecruitments();
+}
+
+// ── Apps Script ───────────────────────────────────────────────────
+async function showScript(id) {
+  const rec = recruitments.find(r=>r.id===id);
+  document.getElementById('script-rec-name').textContent = rec.name;
+  const r = await fetch(`/admin/recruitments/${id}/script`); const d = await r.json();
+  document.getElementById('script-code').textContent = d.script;
+  document.getElementById('script-overlay').classList.add('open');
+}
+function closeScriptModal() { document.getElementById('script-overlay').classList.remove('open'); }
+function copyScript() {
+  navigator.clipboard.writeText(document.getElementById('script-code').textContent);
+  document.querySelector('.copy-code-btn').textContent='Skopiowano!';
+  setTimeout(()=>document.querySelector('.copy-code-btn').textContent='Kopiuj kod',2000);
+}
+
+// ── Kandydaci ─────────────────────────────────────────────────────
 async function loadCandidates() {
-  const r = await fetch('/admin/candidates');
-  if (!r.ok) return;
-  allCandidates = await r.json();
-  updateStats();
-  renderTable();
+  const r = await fetch('/admin/candidates'); allCandidates = await r.json();
+  document.getElementById('badge-cand').textContent = allCandidates.length;
+  renderStats(); renderCandidates();
 }
 
-function updateStats() {
-  document.getElementById('stat-total').textContent = allCandidates.length;
-  document.getElementById('stat-today').textContent = allCandidates.filter(c => isToday(c.submittedAt)).length;
-  document.getElementById('stat-eng').textContent = allCandidates.filter(c => parseInt(c.angielski) >= 3).length;
-  document.getElementById('stat-exp').textContent = allCandidates.filter(c => {
-    const u = listuj(c.umiejetnosci_lista);
-    return u.includes('ekspres') || u.includes('ciśnieniowego');
-  }).length;
-  document.getElementById('cand-count-top').textContent = `(${allCandidates.length} zgłoszeń)`;
+function renderStats() {
+  const today = allCandidates.filter(c=>isToday(c.submittedAt)).length;
+  const eng = allCandidates.filter(c=>parseInt(c.angielski)>=3).length;
+  const exp = allCandidates.filter(c=>lst(c.umiejetnosci_lista).includes('ekspres')).length;
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat"><div class="stat-num">${allCandidates.length}</div><div class="stat-lbl">Wszystkich zgłoszeń</div></div>
+    <div class="stat"><div class="stat-num">${today}</div><div class="stat-lbl">Dzisiaj</div></div>
+    <div class="stat"><div class="stat-num">${eng}</div><div class="stat-lbl">Angielski kom.+</div></div>
+    <div class="stat"><div class="stat-num">${exp}</div><div class="stat-lbl">Doświadczenie z ekspresem</div></div>`;
 }
 
-function renderTable() {
+function renderCandidates() {
   const q = document.getElementById('search').value.toLowerCase();
+  const recFilter = document.getElementById('filter-rec').value;
   const filtered = allCandidates.filter(c =>
-    !q || c.imie_nazwisko?.toLowerCase().includes(q) ||
-    c.email?.toLowerCase().includes(q) ||
-    c.o_sobie?.toLowerCase().includes(q)
+    (!recFilter || c.recruitmentId == recFilter) &&
+    (!q || c.imie_nazwisko?.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q))
   );
-
   const tbody = document.getElementById('tbody');
-  document.getElementById('empty').style.display = filtered.length ? 'none' : 'block';
-
+  document.getElementById('empty').style.display = filtered.length?'none':'block';
+  const recName = id => { const r=recruitments.find(r=>r.id==id); return r?r.name:'—'; };
   tbody.innerHTML = filtered.map(c => {
-    const eng = parseInt(c.angielski) || 0;
-    const engBadge = eng >= 3
-      ? `<span class="badge green">${poziom(c.angielski)}</span>`
-      : `<span class="badge">${poziom(c.angielski)}</span>`;
-    return `
-      <tr class="cand-row" onclick="openModal(${c.id})">
-        <td>
-          <div class="name-cell">
-            <div class="avatar">${initials(c.imie_nazwisko||'?')}</div>
-            <div>
-              <div class="name-main">${c.imie_nazwisko}</div>
-              <div class="name-sub">${c.wiek} lat &middot; ${c.student === 'Tak' ? 'student' : 'nie student'}</div>
-            </div>
-          </div>
-        </td>
-        <td>
-          <div>${c.email}</div>
-          <div style="font-size:12px;color:#aaa">${c.telefon}</div>
-        </td>
-        <td><span class="badge">${c.okres || '—'}</span></td>
-        <td>${engBadge}</td>
-        <td style="font-size:13px;color:#888">${fmtDate(c.submittedAt)}</td>
-        <td onclick="event.stopPropagation()">
-          <button class="del-btn" onclick="deleteCandidate(${c.id})">Usuń</button>
-        </td>
-      </tr>`;
+    const eng = parseInt(c.angielski)||0;
+    return `<tr class="clickable" onclick="openCandModal(${c.id})">
+      <td><div class="name-cell"><div class="avatar">${initials(c.imie_nazwisko||'?')}</div><div>
+        <div class="name-main">${c.imie_nazwisko}</div>
+        <div class="name-sub">${c.wiek} lat &middot; ${c.student==='Tak'?'student':'—'}</div>
+      </div></div></td>
+      <td><span class="badge">${recName(c.recruitmentId)}</span></td>
+      <td><div>${c.email}</div><div style="font-size:12px;color:#aaa">${c.telefon}</div></td>
+      <td><span class="badge">${c.okres||'—'}</span></td>
+      <td><span class="badge ${eng>=3?'badge-green':''}">${poz(c.angielski)}</span></td>
+      <td style="font-size:12px;color:#888">${fmtDate(c.submittedAt)}</td>
+      <td onclick="event.stopPropagation()"><button class="btn btn-danger" style="padding:4px 10px;font-size:12px" onclick="deleteCand(${c.id})">Usuń</button></td>
+    </tr>`;
   }).join('');
 }
 
-function openModal(id) {
-  const c = allCandidates.find(x => x.id === id);
-  if (!c) return;
-  document.getElementById('modal-name').textContent = c.imie_nazwisko;
-  document.getElementById('modal-date').textContent = 'Zgłoszenie: ' + fmtDate(c.submittedAt);
-
-  const umiej = listuj(c.umiejetnosci_lista);
-  const dysp = listuj(c.dyspozycyjnosc);
-
-  document.getElementById('modal-body').innerHTML = `
-    <div class="msec">
-      <div class="msec-title">Dane kontaktowe</div>
+function openCandModal(id) {
+  const c = allCandidates.find(x=>x.id===id); if(!c) return;
+  const recName = recruitments.find(r=>r.id==c.recruitmentId)?.name||'—';
+  document.getElementById('cm-name').textContent = c.imie_nazwisko;
+  document.getElementById('cm-date').textContent = `${recName} · ${fmtDate(c.submittedAt)}`;
+  const u=lst(c.umiejetnosci_lista), d=lst(c.dyspozycyjnosc);
+  document.getElementById('cm-body').innerHTML = `
+    <div class="msec"><div class="msec-title">Dane kontaktowe</div>
       <div class="mrow"><span class="mlbl">Telefon</span><span class="mval">${c.telefon}</span></div>
       <div class="mrow"><span class="mlbl">E-mail</span><span class="mval">${c.email}</span></div>
       <div class="mrow"><span class="mlbl">Wiek</span><span class="mval">${c.wiek} lat</span></div>
-      <div class="mrow"><span class="mlbl">Uczeń / student</span><span class="mval">${c.student}</span></div>
-      ${c.szkola ? `<div class="mrow"><span class="mlbl">Szkoła / uczelnia</span><span class="mval">${c.szkola}</span></div>` : ''}
+      <div class="mrow"><span class="mlbl">Student</span><span class="mval">${c.student}</span></div>
+      ${c.szkola?`<div class="mrow"><span class="mlbl">Szkoła</span><span class="mval">${c.szkola}</span></div>`:''}
     </div>
-    <div class="msec">
-      <div class="msec-title">Motywacja</div>
-      <div class="mq">O sobie i dlaczego cukru.cafe</div><div class="mans">${c.o_sobie}</div>
-      <div class="mq">Co lubi w pracy z ludźmi</div><div class="mans">${c.praca_z_ludzmi}</div>
+    <div class="msec"><div class="msec-title">Motywacja</div>
+      <div class="mq">O sobie</div><div class="mans">${c.o_sobie}</div>
+      <div class="mq">Praca z ludźmi</div><div class="mans">${c.praca_z_ludzmi}</div>
     </div>
-    <div class="msec">
-      <div class="msec-title">Doświadczenie</div>
-      <div class="mans">${c.doswiadczenie || '—'}</div>
-      <div>${umiej !== '—' ? umiej.split(',').map(u=>`<span class="mbadge">${u.trim()}</span>`).join('') : '—'}</div>
+    <div class="msec"><div class="msec-title">Doświadczenie</div>
+      <div class="mans">${c.doswiadczenie||'—'}</div>
+      <div>${u!=='—'?u.split(',').map(x=>`<span class="mbadge">${x.trim()}</span>`).join(''):'—'}</div>
     </div>
-    <div class="msec">
-      <div class="msec-title">Dostępność</div>
+    <div class="msec"><div class="msec-title">Dostępność</div>
       <div class="mrow"><span class="mlbl">Okres</span><span class="mval">${c.okres}</span></div>
-      <div class="mrow"><span class="mlbl">Godziny tygodniowo</span><span class="mval">${c.godziny}</span></div>
-      <div class="mrow"><span class="mlbl">Preferowane godziny</span><span class="mval">${listuj(c.preferowane_godziny)}</span></div>
-      ${c.ograniczenia ? `<div class="mq">Ograniczenia</div><div class="mans">${c.ograniczenia}</div>` : ''}
-      <div style="margin-top:8px">${dysp !== '—' ? dysp.split(',').map(u=>`<span class="mbadge">${u.trim()}</span>`).join('') : '—'}</div>
+      <div class="mrow"><span class="mlbl">Godziny/tydz.</span><span class="mval">${c.godziny}</span></div>
+      <div class="mrow"><span class="mlbl">Pref. godziny</span><span class="mval">${lst(c.preferowane_godziny)}</span></div>
+      ${c.ograniczenia?`<div class="mans">${c.ograniczenia}</div>`:''}
+      <div style="margin-top:8px">${d!=='—'?d.split(',').map(x=>`<span class="mbadge">${x.trim()}</span>`).join(''):'—'}</div>
     </div>
-    <div class="msec">
-      <div class="msec-title">Języki obce</div>
-      <div class="mrow"><span class="mlbl">Angielski</span><span class="mval">${poziom(c.angielski)}</span></div>
-      <div class="mrow"><span class="mlbl">Niemiecki</span><span class="mval">${poziom(c.niemiecki)}</span></div>
-      <div class="mrow"><span class="mlbl">Czeski</span><span class="mval">${poziom(c.czeski)}</span></div>
+    <div class="msec"><div class="msec-title">Języki</div>
+      <div class="mrow"><span class="mlbl">Angielski</span><span class="mval">${poz(c.angielski)}</span></div>
+      <div class="mrow"><span class="mlbl">Niemiecki</span><span class="mval">${poz(c.niemiecki)}</span></div>
+      <div class="mrow"><span class="mlbl">Czeski</span><span class="mval">${poz(c.czeski)}</span></div>
     </div>
-    <div class="msec">
-      <div class="msec-title">Zadania kreatywne</div>
-      <div class="mq">Propozycja napoju sezonowego</div><div class="mans">${c.napoj}</div>
-      <div class="mq">Klient niezadowolony z kawy</div><div class="mans">${c.sytuacja_kawa}</div>
-      <div class="mq">Klient czekający na śniadanie</div><div class="mans">${c.sytuacja_sniadanie}</div>
+    <div class="msec"><div class="msec-title">Zadania kreatywne</div>
+      <div class="mq">Propozycja napoju</div><div class="mans">${c.napoj}</div>
+      <div class="mq">Klient – zła kawa</div><div class="mans">${c.sytuacja_kawa}</div>
+      <div class="mq">Klient – długie czekanie</div><div class="mans">${c.sytuacja_sniadanie}</div>
     </div>
-    ${c.dodatkowe ? `<div class="msec"><div class="msec-title">Dodatkowe informacje</div><div class="mans">${c.dodatkowe}</div></div>` : ''}
-    <div class="msec">
-      <div class="mrow"><span class="mlbl">Źródło ogłoszenia</span><span class="mval">${c.zrodlo || '—'}</span></div>
-    </div>`;
-
-  document.getElementById('overlay').classList.add('open');
+    ${c.dodatkowe?`<div class="msec"><div class="msec-title">Dodatkowe</div><div class="mans">${c.dodatkowe}</div></div>`:''}
+    <div class="msec"><div class="mrow"><span class="mlbl">Źródło</span><span class="mval">${c.zrodlo||'—'}</span></div></div>`;
+  document.getElementById('cand-overlay').classList.add('open');
 }
+function closeCandModal() { document.getElementById('cand-overlay').classList.remove('open'); }
 
-function closeModal(e) {
-  if (!e || e.target === document.getElementById('overlay')) {
-    document.getElementById('overlay').classList.remove('open');
-  }
-}
-
-async function deleteCandidate(id) {
-  if (!confirm('Usunąć to zgłoszenie? Tej operacji nie można cofnąć.')) return;
-  await fetch(`/admin/candidates/${id}`, { method: 'DELETE' });
+async function deleteCand(id) {
+  if(!confirm('Usunąć to zgłoszenie?')) return;
+  await fetch(`/admin/candidates/${id}`,{method:'DELETE'});
   await loadCandidates();
 }
 

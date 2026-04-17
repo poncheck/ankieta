@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "slug": "barista-2024",
+    "name": "Barista / Obsługa klienta #1",
+    "isDefault": true,
+    "active": true,
+    "createdAt": "2026-04-17T15:03:29.032Z",
+    "jobTitle": "barista / obsługa klienta",
+    "workType": "Pełen etat",
+    "description": "Poszukujemy do ekipy cukru.cafe komunikatywnej, kreatywnej osoby do pracy za barem. Wymagane doświadczenie!\n\nSzukamy osoby, dla której kawa jest pasją, a kontakt z ludźmi samą przyjemnością. Sumiennej i zorganizowanej, chętnej do nauki i rozwoju. Nowego pracownika szkolimy z zakresu przygotowania kaw pod nasze standardy.",
+    "duties": [
+      "Obsługa klienta",
+      "Organizacja pracy za barem i dbałość o czystość",
+      "Przygotowywanie kaw z wykorzystaniem ekspresu ciśnieniowego",
+      "Przygotowywanie kaw metodami alternatywnymi",
+      "Dyspozycyjność – weekendy i święta",
+      "Współpraca przy tworzeniu menu",
+      "Znajomość tematu piw kraftowych"
+    ],
+    "rates": {
+      "trial": 25,
+      "onboarding": 27,
+      "after": 30
+    }
+  }
+]

@@ -6,415 +6,107 @@
   <title>Rekrutacja – cukru.cafe</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: #f2ede8; color: #1a1a1a; min-height: 100vh; }
 
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #f2ede8;
-      color: #1a1a1a;
-      min-height: 100vh;
-    }
+    header { background: #1a1a1a; color: #f2ede8; padding: 40px 24px 32px; text-align: center; }
+    header .logo { width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 20px; display: block; object-fit: cover; }
+    header .brand { font-size: 13px; letter-spacing: .15em; text-transform: uppercase; opacity: .5; margin-bottom: 12px; }
+    header h1 { font-size: clamp(20px,4vw,30px); font-weight: 600; margin: 0 0 8px; line-height: 1.3; }
+    header p { font-size: 15px; opacity: .6; margin: 0; }
 
-    header {
-      background: #1a1a1a;
-      color: #f2ede8;
-      padding: 40px 24px 32px;
-      text-align: center;
-    }
+    .job-info { background: #fff; max-width: 720px; margin: 32px auto 0; border-radius: 12px; padding: 28px 32px; border: 1px solid #e8e4df; }
+    .job-info h2 { font-size: 16px; font-weight: 600; margin: 0 0 14px; }
+    .duties { list-style: none; padding: 0; margin: 0 0 20px; }
+    .duties li { font-size: 14px; padding: 4px 0 4px 18px; position: relative; color: #444; line-height: 1.5; }
+    .duties li::before { content: '•'; position: absolute; left: 0; color: #aaa; }
+    .desc-text { font-size: 13px; color: #666; margin: 0 0 16px; line-height: 1.6; white-space: pre-line; }
+    .rates { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 16px; }
+    .rate-card { background: #f7f4f0; border-radius: 8px; padding: 14px; text-align: center; }
+    .rate-card .amount { font-size: 20px; font-weight: 700; }
+    .rate-card .netto { font-size: 11px; color: #999; }
+    .rate-card .label { font-size: 12px; color: #666; margin-top: 4px; }
 
-    header .logo {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      margin: 0 auto 20px;
-      display: block;
-      object-fit: cover;
-    }
-
-    header .brand {
-      font-size: 13px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      opacity: 0.5;
-      margin-bottom: 12px;
-    }
-
-    header h1 {
-      font-size: clamp(22px, 4vw, 32px);
-      font-weight: 600;
-      margin: 0 0 8px;
-      line-height: 1.3;
-    }
-
-    header p {
-      font-size: 15px;
-      opacity: 0.6;
-      margin: 0;
-    }
-
-    .job-info {
-      background: #fff;
-      max-width: 720px;
-      margin: 32px auto 0;
-      border-radius: 12px;
-      padding: 28px 32px;
-      border: 1px solid #e8e4df;
-    }
-
-    .job-info h2 {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 0 0 16px;
-      color: #1a1a1a;
-    }
-
-    .duties {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 20px;
-    }
-
-    .duties li {
-      font-size: 14px;
-      padding: 4px 0 4px 18px;
-      position: relative;
-      color: #444;
-      line-height: 1.5;
-    }
-
-    .duties li::before {
-      content: '•';
-      position: absolute;
-      left: 0;
-      color: #aaa;
-    }
-
-    .rates {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    .rate-card {
-      background: #f7f4f0;
-      border-radius: 8px;
-      padding: 14px;
-      text-align: center;
-    }
-
-    .rate-card .amount {
-      font-size: 20px;
-      font-weight: 700;
-      color: #1a1a1a;
-    }
-
-    .rate-card .netto {
-      font-size: 11px;
-      color: #999;
-    }
-
-    .rate-card .label {
-      font-size: 12px;
-      color: #666;
-      margin-top: 4px;
-    }
-
-    form {
-      max-width: 720px;
-      margin: 24px auto 48px;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    .section {
-      background: #fff;
-      border-radius: 12px;
-      padding: 28px 32px;
-      border: 1px solid #e8e4df;
-      margin-bottom: 16px;
-    }
-
-    .section-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: #aaa;
-      font-weight: 600;
-      margin: 0 0 20px;
-    }
-
-    .field {
-      margin-bottom: 20px;
-    }
-
+    form { max-width: 720px; margin: 24px auto 48px; display: flex; flex-direction: column; gap: 0; }
+    .section { background: #fff; border-radius: 12px; padding: 28px 32px; border: 1px solid #e8e4df; margin-bottom: 16px; }
+    .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #aaa; font-weight: 600; margin: 0 0 20px; }
+    .field { margin-bottom: 20px; }
     .field:last-child { margin-bottom: 0; }
-
-    label {
-      display: block;
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 6px;
-      color: #1a1a1a;
+    label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+    label .hint { display: block; font-size: 12px; font-weight: 400; color: #999; margin-top: 2px; }
+    label .req { color: #c0392b; margin-left: 2px; }
+    input[type="text"], input[type="email"], input[type="number"], textarea, select {
+      width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 14px; font-family: inherit; background: #fafafa; color: #1a1a1a;
+      transition: border-color .15s; outline: none;
     }
-
-    label .hint {
-      display: block;
-      font-size: 12px;
-      font-weight: 400;
-      color: #999;
-      margin-top: 2px;
-    }
-
-    label .req {
-      color: #c0392b;
-      margin-left: 2px;
-    }
-
-    input[type="text"],
-    input[type="email"],
-    input[type="number"],
-    textarea,
-    select {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      background: #fafafa;
-      color: #1a1a1a;
-      transition: border-color 0.15s;
-      outline: none;
-    }
-
-    input:focus, textarea:focus, select:focus {
-      border-color: #1a1a1a;
-      background: #fff;
-    }
-
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-      line-height: 1.6;
-    }
-
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .checkbox-group, .radio-group {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .checkbox-group label, .radio-group label {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      font-weight: 400;
-      cursor: pointer;
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid #ececec;
-      transition: background 0.1s;
-    }
-
-    .checkbox-group label:hover, .radio-group label:hover {
-      background: #f7f4f0;
-    }
-
-    input[type="checkbox"], input[type="radio"] {
-      width: 16px;
-      height: 16px;
-      accent-color: #1a1a1a;
-      flex-shrink: 0;
-    }
-
-    /* Skala języków */
-    .scale-group {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .scale-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .scale-lang {
-      font-size: 14px;
-      font-weight: 500;
-      min-width: 90px;
-    }
-
-    .scale-options {
-      display: flex;
-      gap: 6px;
-      flex: 1;
-    }
-
-    .scale-options label {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 400;
-      color: #666;
-      cursor: pointer;
-      padding: 8px 4px;
-      border-radius: 8px;
-      border: 1px solid #ececec;
-      transition: background 0.1s, border-color 0.1s;
-      text-align: center;
-      margin: 0;
-    }
-
-    .scale-options input[type="radio"] {
-      width: 14px;
-      height: 14px;
-    }
-
-    .scale-options label:has(input:checked) {
-      background: #1a1a1a;
-      border-color: #1a1a1a;
-      color: #fff;
-    }
-
-    .submit-btn {
-      background: #1a1a1a;
-      color: #f2ede8;
-      border: none;
-      padding: 16px 32px;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      transition: opacity 0.15s, transform 0.1s;
-      font-family: inherit;
-    }
-
-    .submit-btn:hover { opacity: 0.85; }
-    .submit-btn:active { transform: scale(0.99); }
-    .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    .toast {
-      display: none;
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1a1a1a;
-      color: #fff;
-      padding: 14px 24px;
-      border-radius: 10px;
-      font-size: 14px;
-      z-index: 999;
-      text-align: center;
-      max-width: 90vw;
-    }
-
+    input:focus, textarea:focus, select:focus { border-color: #1a1a1a; background: #fff; }
+    textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .checkbox-group, .radio-group { display: flex; flex-direction: column; gap: 10px; }
+    .checkbox-group label, .radio-group label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 400; cursor: pointer; padding: 8px 12px; border-radius: 8px; border: 1px solid #ececec; transition: background .1s; margin: 0; }
+    .checkbox-group label:hover, .radio-group label:hover { background: #f7f4f0; }
+    input[type="checkbox"], input[type="radio"] { width: 16px; height: 16px; accent-color: #1a1a1a; flex-shrink: 0; }
+    .scale-group { display: flex; flex-direction: column; gap: 16px; }
+    .scale-row { display: flex; align-items: center; gap: 12px; }
+    .scale-lang { font-size: 14px; font-weight: 500; min-width: 90px; }
+    .scale-options { display: flex; gap: 6px; flex: 1; }
+    .scale-options label { flex: 1; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #666; padding: 8px 4px; border-radius: 8px; border: 1px solid #ececec; text-align: center; margin: 0; }
+    .scale-options input[type="radio"] { width: 14px; height: 14px; }
+    .scale-options label:has(input:checked) { background: #1a1a1a; border-color: #1a1a1a; color: #fff; }
+    .submit-btn { background: #1a1a1a; color: #f2ede8; border: none; padding: 16px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; transition: opacity .15s; font-family: inherit; }
+    .submit-btn:hover { opacity: .85; }
+    .submit-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .toast { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 14px 24px; border-radius: 10px; font-size: 14px; z-index: 999; }
     .toast.error { background: #c0392b; }
-
-    .success-screen {
-      display: none;
-      max-width: 720px;
-      margin: 48px auto;
-      text-align: center;
-      padding: 24px;
-    }
-
+    .success-screen { display: none; max-width: 720px; margin: 48px auto; text-align: center; padding: 24px; }
     .success-screen h2 { font-size: 24px; margin-bottom: 12px; }
     .success-screen p { color: #666; font-size: 15px; }
-
-    @media (max-width: 600px) {
-      .job-info, .section { padding: 20px 18px; }
-      .two-col { grid-template-columns: 1fr; }
-      .rates { grid-template-columns: 1fr; }
-      .scale-row { flex-direction: column; align-items: flex-start; }
-    }
+    .not-found { max-width: 500px; margin: 80px auto; text-align: center; padding: 24px; }
+    .not-found h2 { font-size: 22px; }
+    .not-found p { color: #888; }
+    @media(max-width:600px) { .job-info, .section { padding: 20px 18px; } .two-col { grid-template-columns: 1fr; } .rates { grid-template-columns: 1fr; } .scale-row { flex-direction: column; align-items: flex-start; } }
   </style>
 </head>
 <body>
 
 <header>
-  <img src="/logo.png" alt="cukru logo" class="logo">
+  <img src="/logo.png" alt="cukru.cafe logo" class="logo">
   <div class="brand">cukru.cafe — Jelenia Góra</div>
-  <h1>Rekrutacja: barista / obsługa klienta</h1>
+  <h1 id="header-title">Rekrutacja</h1>
   <p>Wypełnienie formularza zajmie ok. 10 minut</p>
 </header>
 
-<div class="job-info">
-  <h2>O stanowisku</h2>
-  <ul class="duties">
-    <li>Obsługa klienta</li>
-    <li>Organizacja pracy za barem i dbałość o czystość</li>
-    <li>Przygotowywanie kaw z wykorzystaniem ekspresu ciśnieniowego</li>
-    <li>Przygotowywanie kaw metodami alternatywnymi</li>
-    <li>Dyspozycyjność – weekendy i święta</li>
-    <li>Współpraca przy tworzeniu menu</li>
-    <li>Znajomość tematu piw kraftowych</li>
-  </ul>
-  <p style="font-size:13px;color:#666;margin:0 0 16px;">Szukamy osoby, dla której kawa jest pasją, a kontakt z ludźmi przyjemnością. Sumiennej, zorganizowanej, chętnej do nauki. Nowego pracownika szkolimy pod nasze standardy.</p>
-  <p style="font-size:13px;color:#666;margin:0 0 12px;font-weight:600;">Wynagrodzenie (stawki netto):</p>
-  <div class="rates">
-    <div class="rate-card">
-      <div class="amount">25 zł/h</div>
-      <div class="netto">netto</div>
-      <div class="label">dzień próbny</div>
-    </div>
-    <div class="rate-card">
-      <div class="amount">27 zł/h</div>
-      <div class="netto">netto</div>
-      <div class="label">okres wdrożenia</div>
-    </div>
-    <div class="rate-card">
-      <div class="amount">30 zł/h</div>
-      <div class="netto">netto</div>
-      <div class="label">po wdrożeniu</div>
-    </div>
-  </div>
-  <p style="font-size:12px;color:#aaa;margin:12px 0 0;">Dla uczniów i studentów obowiązują osobne warunki. Umowa o pracę, system zmianowy.</p>
+<div id="not-found" class="not-found" style="display:none">
+  <h2>Rekrutacja nie istnieje</h2>
+  <p>Ta rekrutacja została zakończona lub nie istnieje.</p>
 </div>
 
-<form id="form">
+<div id="job-info" class="job-info" style="display:none">
+  <h2>O stanowisku</h2>
+  <ul class="duties" id="duties-list"></ul>
+  <p class="desc-text" id="desc-text"></p>
+  <p style="font-size:13px;color:#666;margin:0 0 12px;font-weight:600">Wynagrodzenie (stawki netto):</p>
+  <div class="rates">
+    <div class="rate-card"><div class="amount" id="rate-trial">—</div><div class="netto">netto</div><div class="label">dzień próbny</div></div>
+    <div class="rate-card"><div class="amount" id="rate-onboarding">—</div><div class="netto">netto</div><div class="label">okres wdrożenia</div></div>
+    <div class="rate-card"><div class="amount" id="rate-after">—</div><div class="netto">netto</div><div class="label">po wdrożeniu</div></div>
+  </div>
+  <p style="font-size:12px;color:#aaa;margin:12px 0 0">Dla uczniów i studentów obowiązują osobne warunki. Umowa o pracę, system zmianowy.</p>
+</div>
 
-  <!-- SEKCJA 1 -->
+<form id="form" style="display:none">
+  <input type="hidden" id="recruitment-id" name="recruitmentId">
+
   <div class="section">
     <div class="section-title">Dane podstawowe</div>
-
     <div class="two-col">
-      <div class="field">
-        <label>Imię i nazwisko <span class="req">*</span></label>
-        <input type="text" name="imie_nazwisko" required>
-      </div>
-      <div class="field">
-        <label>Wiek <span class="req">*</span></label>
-        <input type="number" name="wiek" min="15" max="99" required>
-      </div>
+      <div class="field"><label>Imię i nazwisko <span class="req">*</span></label><input type="text" name="imie_nazwisko" required></div>
+      <div class="field"><label>Wiek <span class="req">*</span></label><input type="number" name="wiek" min="15" max="99" required></div>
     </div>
-
     <div class="two-col">
-      <div class="field">
-        <label>Numer telefonu <span class="req">*</span></label>
-        <input type="text" name="telefon" required>
-      </div>
-      <div class="field">
-        <label>Adres e-mail <span class="req">*</span></label>
-        <input type="email" name="email" required>
-      </div>
+      <div class="field"><label>Numer telefonu <span class="req">*</span></label><input type="text" name="telefon" required></div>
+      <div class="field"><label>Adres e-mail <span class="req">*</span></label><input type="email" name="email" required></div>
     </div>
-
     <div class="field">
       <label>Czy jesteś uczniem lub studentem? <span class="req">*</span></label>
       <div class="radio-group">
@@ -422,43 +114,30 @@
         <label><input type="radio" name="student" value="Nie"> Nie</label>
       </div>
     </div>
-
     <div class="field" id="szkola-field" style="display:none">
-      <label>Szkoła / uczelnia i kierunek
-        <span class="hint">Wypełnij tylko jeśli jesteś uczniem lub studentem</span>
-      </label>
+      <label>Szkoła / uczelnia i kierunek<span class="hint">Wypełnij tylko jeśli jesteś uczniem lub studentem</span></label>
       <input type="text" name="szkola">
     </div>
   </div>
 
-  <!-- SEKCJA 2 -->
   <div class="section">
     <div class="section-title">Motywacja i osobowość</div>
-
     <div class="field">
-      <label>Napisz kilka zdań o sobie i dlaczego zainteresowała Cię nasza oferta <span class="req">*</span>
-        <span class="hint">Nie musisz pisać formalnie – zależy nam na tym, żebyś był/a sobą</span>
-      </label>
+      <label>Napisz kilka zdań o sobie i dlaczego zainteresowała Cię nasza oferta <span class="req">*</span><span class="hint">Nie musisz pisać formalnie – zależy nam na tym, żebyś był/a sobą</span></label>
       <textarea name="o_sobie" required></textarea>
     </div>
-
     <div class="field">
       <label>Co lubisz najbardziej w pracy z ludźmi? Co Cię w niej nakręca? <span class="req">*</span></label>
       <textarea name="praca_z_ludzmi" required></textarea>
     </div>
   </div>
 
-  <!-- SEKCJA 3 -->
   <div class="section">
     <div class="section-title">Doświadczenie</div>
-
     <div class="field">
-      <label>Opisz swoje dotychczasowe doświadczenie zawodowe
-        <span class="hint">Kawiarnia, gastronomia, handel, obsługa klienta – każde się liczy</span>
-      </label>
+      <label>Opisz swoje dotychczasowe doświadczenie zawodowe<span class="hint">Kawiarnia, gastronomia, handel, obsługa klienta – każde się liczy</span></label>
       <textarea name="doswiadczenie"></textarea>
     </div>
-
     <div class="field">
       <label>Z czym masz już doświadczenie?</label>
       <div class="checkbox-group">
@@ -474,10 +153,8 @@
     </div>
   </div>
 
-  <!-- SEKCJA 4 -->
   <div class="section">
     <div class="section-title">Dostępność i warunki</div>
-
     <div class="field">
       <label>Na jaki okres szukasz pracy? <span class="req">*</span></label>
       <div class="radio-group">
@@ -487,7 +164,6 @@
         <label><input type="radio" name="okres" value="Nie wiem jeszcze"> Nie wiem jeszcze</label>
       </div>
     </div>
-
     <div class="field">
       <label>Ile godzin tygodniowo możesz pracować? <span class="req">*</span></label>
       <div class="radio-group">
@@ -497,42 +173,34 @@
         <label><input type="radio" name="godziny" value="Elastycznie"> Elastycznie – dopasowuję się do grafiku</label>
       </div>
     </div>
-
     <div class="field">
       <label>Preferowane godziny pracy <span class="req">*</span></label>
       <div class="checkbox-group">
         <label><input type="checkbox" name="preferowane_godziny" value="Rano (od ok. 6:00–7:00)"> Rano (od ok. 6:00–7:00)</label>
         <label><input type="checkbox" name="preferowane_godziny" value="Południe i popołudnie"> Południe i popołudnie</label>
-        <label><input type="checkbox" name="preferowane_godziny" value="Elastycznie"> Elastycznie – dopasowuję się do grafiku</label>
+        <label><input type="checkbox" name="preferowane_godziny" value="Elastycznie"> Elastycznie</label>
       </div>
     </div>
-
     <div class="field">
-      <label>Ograniczenia dostępności
-        <span class="hint">Np. zajęcia na uczelni, inne zobowiązania</span>
-      </label>
+      <label>Ograniczenia dostępności<span class="hint">Np. zajęcia na uczelni, inne zobowiązania</span></label>
       <textarea name="ograniczenia" style="min-height:60px"></textarea>
     </div>
   </div>
 
-  <!-- SEKCJA 5 -->
   <div class="section">
     <div class="section-title">Umiejętności i dyspozycyjność</div>
-
     <div class="field">
       <div class="checkbox-group">
         <label><input type="checkbox" name="dyspozycyjnosc" value="Dostępność w weekendy"> Dostępność w weekendy</label>
         <label><input type="checkbox" name="dyspozycyjnosc" value="Dostępność w święta"> Dostępność w święta</label>
         <label><input type="checkbox" name="dyspozycyjnosc" value="Umiejętność pracy z tacą"> Umiejętność pracy z tacą kelnerską</label>
-        <label><input type="checkbox" name="dyspozycyjnosc" value="Posiadam książeczkę sanepidu"> Posiadam aktualne badania sanepidu (książeczkę)</label>
+        <label><input type="checkbox" name="dyspozycyjnosc" value="Posiadam książeczkę sanepidu"> Posiadam aktualne badania sanepidu</label>
         <label><input type="checkbox" name="dyspozycyjnosc" value="Gotowość do pracy pod presją"> Gotowość do pracy w szybkim tempie i pod presją</label>
       </div>
     </div>
-
     <div class="field">
       <label>Znajomość języków obcych <span class="req">*</span></label>
       <div class="scale-group">
-
         <div class="scale-row">
           <span class="scale-lang">Angielski</span>
           <div class="scale-options">
@@ -542,7 +210,6 @@
             <label><input type="radio" name="angielski" value="4">Biegły</label>
           </div>
         </div>
-
         <div class="scale-row">
           <span class="scale-lang">Niemiecki</span>
           <div class="scale-options">
@@ -552,7 +219,6 @@
             <label><input type="radio" name="niemiecki" value="4">Biegły</label>
           </div>
         </div>
-
         <div class="scale-row">
           <span class="scale-lang">Czeski</span>
           <div class="scale-options">
@@ -562,142 +228,127 @@
             <label><input type="radio" name="czeski" value="4">Biegły</label>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 
-  <!-- SEKCJA 6 -->
   <div class="section">
     <div class="section-title">Zadania kreatywne – pokaż nam jak myślisz</div>
-
     <div class="field">
-      <label>Zaproponuj jeden sezonowy letni napój – kawowy, matchowy lub soft drink <span class="req">*</span>
-        <span class="hint">Opisz nazwę, składniki, dlaczego się sprawdzi i jak byś go sprzedał/a klientowi</span>
-      </label>
+      <label>Zaproponuj jeden sezonowy letni napój – kawowy, matchowy lub soft drink <span class="req">*</span><span class="hint">Opisz nazwę, składniki, dlaczego się sprawdzi i jak byś go sprzedał/a klientowi</span></label>
       <textarea name="napoj" required></textarea>
     </div>
-
     <div class="field">
-      <label>Masz za sobą pracowitą zmianę, kolejka nie odpuszcza – i nagle klient wraca z kawą twierdząc, że jest zła. Co robisz? <span class="req">*</span>
-        <span class="hint">Nie ma złej odpowiedzi – zależy nam na tym, jak myślisz i reagujesz</span>
-      </label>
+      <label>Masz za sobą pracowitą zmianę – i nagle klient wraca z kawą twierdząc, że jest zła. Co robisz? <span class="req">*</span><span class="hint">Nie ma złej odpowiedzi – zależy nam na tym, jak myślisz i reagujesz</span></label>
       <textarea name="sytuacja_kawa" required></textarea>
     </div>
-
     <div class="field">
       <label>Obsługujesz klienta, który uważa, że za długo czeka na śniadanie. Opisz jak rozwiązujesz tę sytuację. <span class="req">*</span></label>
       <textarea name="sytuacja_sniadanie" required></textarea>
     </div>
   </div>
 
-  <!-- SEKCJA 7 -->
   <div class="section">
     <div class="section-title">Na koniec</div>
-
     <div class="field">
-      <label>Czy jest coś, o czym chcesz nas poinformować, a czego nie było w formularzu?
-        <span class="hint">Szczególne umiejętności, termin dyspozycyjności, cokolwiek innego</span>
-      </label>
+      <label>Czy jest coś, o czym chcesz nas poinformować?<span class="hint">Szczególne umiejętności, termin dyspozycyjności, cokolwiek innego</span></label>
       <textarea name="dodatkowe" style="min-height:60px"></textarea>
     </div>
-
     <div class="field">
       <label>Skąd dowiedziałeś/aś się o naszej ofercie?</label>
       <select name="zrodlo">
         <option value="">– wybierz –</option>
-        <option>Instagram</option>
-        <option>Znajomy / polecenie</option>
-        <option>Ogłoszenie online</option>
-        <option>Inne</option>
+        <option>Instagram</option><option>Znajomy / polecenie</option>
+        <option>Ogłoszenie online</option><option>Inne</option>
       </select>
     </div>
-
     <div class="field">
       <div class="checkbox-group">
         <label>
           <input type="checkbox" name="rodo" value="tak" required>
-          Wyrażam zgodę na przetwarzanie moich danych osobowych zawartych w niniejszym formularzu przez cukru.cafe w celu przeprowadzenia procesu rekrutacyjnego, zgodnie z RODO. <span class="req">*</span>
+          Wyrażam zgodę na przetwarzanie moich danych osobowych przez cukru.cafe w celu przeprowadzenia procesu rekrutacyjnego, zgodnie z RODO. <span class="req">*</span>
         </label>
       </div>
     </div>
   </div>
 
   <button type="submit" class="submit-btn" id="submit-btn">Wyślij zgłoszenie</button>
-
 </form>
 
 <div class="success-screen" id="success-screen">
   <h2>Dziękujemy za zgłoszenie!</h2>
-  <p>Skontaktujemy się z wybranymi kandydatami.<br>Zespół cukru.cafe</p>
+  <p>Skontaktujemy się z wybranymi kandydatami po zakończeniu rekrutacji.<br>Zespół cukru.cafe</p>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-  // Pokaż/ukryj pole szkoły
-  document.querySelectorAll('input[name="student"]').forEach(r => {
-    r.addEventListener('change', () => {
-      document.getElementById('szkola-field').style.display =
-        r.value === 'Tak' ? 'block' : 'none';
+let currentRecruitment = null;
+
+async function loadRecruitment() {
+  const slug = location.pathname.startsWith('/r/') ? location.pathname.replace('/r/', '') : null;
+  const url = slug ? `/api/recruitment/${slug}` : '/api/recruitment/default';
+  try {
+    const r = await fetch(url);
+    if (!r.ok) { document.getElementById('not-found').style.display = 'block'; return; }
+    currentRecruitment = await r.json();
+    renderRecruitment(currentRecruitment);
+  } catch { document.getElementById('not-found').style.display = 'block'; }
+}
+
+function renderRecruitment(rec) {
+  document.title = `${rec.name} – cukru.cafe`;
+  document.getElementById('header-title').textContent = rec.jobTitle;
+  document.getElementById('recruitment-id').value = rec.id;
+  document.getElementById('duties-list').innerHTML = rec.duties.map(d => `<li>${d}</li>`).join('');
+  document.getElementById('desc-text').textContent = rec.description;
+  document.getElementById('rate-trial').textContent = rec.rates.trial + ' zł/h';
+  document.getElementById('rate-onboarding').textContent = rec.rates.onboarding + ' zł/h';
+  document.getElementById('rate-after').textContent = rec.rates.after + ' zł/h';
+  document.getElementById('job-info').style.display = 'block';
+  document.getElementById('form').style.display = 'flex';
+}
+
+document.querySelectorAll('input[name="student"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('szkola-field').style.display = r.value === 'Tak' ? 'block' : 'none';
+  });
+});
+
+function collectCheckboxes(name) {
+  return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value);
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast' + (isError ? ' error' : '');
+  t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 4000);
+}
+
+document.getElementById('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Wysyłam...';
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd.entries());
+  data.umiejetnosci_lista = collectCheckboxes('umiejetnosci_lista');
+  data.preferowane_godziny = collectCheckboxes('preferowane_godziny');
+  data.dyspozycyjnosc = collectCheckboxes('dyspozycyjnosc');
+  try {
+    const r = await fetch(`/submit/${currentRecruitment.id}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
     });
-  });
+    const result = await r.json();
+    if (result.success) {
+      document.getElementById('form').style.display = 'none';
+      document.getElementById('job-info').style.display = 'none';
+      document.getElementById('success-screen').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else { showToast(result.error || 'Coś poszło nie tak.', true); btn.disabled = false; btn.textContent = 'Wyślij zgłoszenie'; }
+  } catch { showToast('Błąd połączenia z serwerem.', true); btn.disabled = false; btn.textContent = 'Wyślij zgłoszenie'; }
+});
 
-  // Zbierz checkboxy jako tablicę
-  function collectCheckboxes(name) {
-    return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`))
-      .map(el => el.value);
-  }
-
-  // Toast helper
-  function showToast(msg, isError = false) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast' + (isError ? ' error' : '');
-    t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 4000);
-  }
-
-  document.getElementById('form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('submit-btn');
-    btn.disabled = true;
-    btn.textContent = 'Wysyłam...';
-
-    const fd = new FormData(e.target);
-    const data = Object.fromEntries(fd.entries());
-
-    // Checkboxy wielokrotnego wyboru
-    data.umiejetnosci_lista = collectCheckboxes('umiejetnosci_lista');
-    data.preferowane_godziny = collectCheckboxes('preferowane_godziny');
-    data.dyspozycyjnosc = collectCheckboxes('dyspozycyjnosc');
-
-    try {
-      const res = await fetch('/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-
-      if (result.success) {
-        document.getElementById('form').style.display = 'none';
-        document.querySelector('.job-info').style.display = 'none';
-        document.getElementById('success-screen').style.display = 'block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        showToast(result.error || 'Coś poszło nie tak.', true);
-        btn.disabled = false;
-        btn.textContent = 'Wyślij zgłoszenie';
-      }
-    } catch (err) {
-      showToast('Błąd połączenia z serwerem.', true);
-      btn.disabled = false;
-      btn.textContent = 'Wyślij zgłoszenie';
-    }
-  });
+loadRecruitment();
 </script>
-
 </body>
 </html>
