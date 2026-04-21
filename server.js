@@ -1,6 +1,7 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
@@ -65,15 +66,24 @@ app.use(express.json({ limit: '512kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── SESSION ───────────────────────────────────────────────────────
+const SESSIONS_DIR = path.join(DATA, 'sessions');
+if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR);
+
 app.use(session({
+  store: new FileStore({
+    path: SESSIONS_DIR,
+    ttl: 8 * 60 * 60,       // 8 godzin w sekundach
+    retries: 1,
+    logFn: () => {},          // wycisza logi session-file-store
+  }),
   secret: process.env.SESSION_SECRET || (() => { throw new Error('SESSION_SECRET wymagany w .env'); })(),
   resave: false,
   saveUninitialized: false,
-  name: 'sid',  // ukrywa że to express-session
+  name: 'sid',
   cookie: {
     maxAge: 8 * 60 * 60 * 1000,
-    httpOnly: true,   // JS nie ma dostępu do cookie
-    secure: process.env.NODE_ENV === 'production',  // HTTPS only w produkcji
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict'
   }
 }));
