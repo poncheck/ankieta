@@ -1,6 +1,8 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const session = require('express-session');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 
@@ -10,21 +12,97 @@ const DATA = path.join(__dirname, 'data');
 
 if (!fs.existsSync(DATA)) fs.mkdirSync(DATA);
 
-app.use(express.urlencoded({ extended: true, limit: '2mb' }));
-app.use(express.json({ limit: '2mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'cukru-secret-2024',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { maxAge: 8 * 60 * 60 * 1000 }
+// ── SECURITY HEADERS (helmet) ─────────────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],   // potrzebne dla inline JS w HTML
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:"],                 // data: dla logo base64 w emailach
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
 }));
 
-// ── Logo base64 ───────────────────────────────────────────────────
+// ── RATE LIMITING ─────────────────────────────────────────────────
+// Formularz: max 10 zgłoszeń / 15 min z jednego IP
+const submitLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Zbyt wiele zgłoszeń. Spróbuj ponownie za kilka minut.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Panel admina: max 20 prób / 15 min (ochrona przed brute-force)
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Zbyt wiele prób. Spróbuj ponownie za kilkanaście minut.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Login: max 5 prób / 15 min
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Zbyt wiele prób logowania. Zablokowane na 15 minut.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ── BODY PARSING ──────────────────────────────────────────────────
+app.use(express.urlencoded({ extended: true, limit: '512kb' }));
+app.use(express.json({ limit: '512kb' }));
+
+// ── STATIC FILES ──────────────────────────────────────────────────
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ── SESSION ───────────────────────────────────────────────────────
+app.use(session({
+  secret: process.env.SESSION_SECRET || (() => { throw new Error('SESSION_SECRET wymagany w .env'); })(),
+  resave: false,
+  saveUninitialized: false,
+  name: 'sid',  // ukrywa że to express-session
+  cookie: {
+    maxAge: 8 * 60 * 60 * 1000,
+    httpOnly: true,   // JS nie ma dostępu do cookie
+    secure: process.env.NODE_ENV === 'production',  // HTTPS only w produkcji
+    sameSite: 'strict'
+  }
+}));
+
+// ── LOGO BASE64 ───────────────────────────────────────────────────
 const logoBase64 = fs.readFileSync(path.join(__dirname, 'public', 'logo.png')).toString('base64');
 const logoSrc = `data:image/png;base64,${logoBase64}`;
 
-// ── Rekrutacje ────────────────────────────────────────────────────
+// ── HTML SANITIZER ────────────────────────────────────────────────
+// Escape znaków HTML aby uniknąć XSS w emailach i panelu
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// ── WALIDACJA POLA ────────────────────────────────────────────────
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email));
+}
+function isValidAge(age) {
+  const n = parseInt(age); return n >= 15 && n <= 80;
+}
+
+// ── REKRUTACJE ────────────────────────────────────────────────────
 const REC_FILE = path.join(DATA, 'recruitments.json');
 
 function loadRecruitments() {
@@ -35,16 +113,21 @@ function saveRecruitments(list) {
   fs.writeFileSync(REC_FILE, JSON.stringify(list, null, 2));
 }
 function getRecruitment(id) {
-  return loadRecruitments().find(r => r.id === parseInt(id));
+  const parsed = parseInt(id);
+  if (isNaN(parsed)) return null;
+  return loadRecruitments().find(r => r.id === parsed);
 }
 function getDefaultRecruitment() {
   const list = loadRecruitments();
   return list.find(r => r.isDefault && r.active) || list.find(r => r.active) || list[0];
 }
 
-// ── Kandydaci ─────────────────────────────────────────────────────
+// ── KANDYDACI ─────────────────────────────────────────────────────
 function candFile(recruitmentId) {
-  return path.join(DATA, `candidates-${recruitmentId}.json`);
+  // Zabezpieczenie przed path traversal: tylko liczby
+  const safe = parseInt(recruitmentId);
+  if (isNaN(safe)) throw new Error('Nieprawidłowe ID rekrutacji');
+  return path.join(DATA, `candidates-${safe}.json`);
 }
 function loadCandidates(recruitmentId) {
   try { return JSON.parse(fs.readFileSync(candFile(recruitmentId), 'utf8')); }
@@ -52,7 +135,40 @@ function loadCandidates(recruitmentId) {
 }
 function saveCandidate(recruitmentId, data) {
   const list = loadCandidates(recruitmentId);
-  const entry = { id: Date.now(), submittedAt: new Date().toISOString(), recruitmentId, ...data };
+  // Zapisujemy TYLKO znane pola — nie cały req.body
+  const entry = {
+    id: Date.now(),
+    submittedAt: new Date().toISOString(),
+    recruitmentId,
+    imie_nazwisko: String(data.imie_nazwisko || '').slice(0, 120),
+    telefon:       String(data.telefon || '').slice(0, 30),
+    email:         String(data.email || '').slice(0, 120),
+    wiek:          String(data.wiek || '').slice(0, 3),
+    student:       data.student === 'Tak' ? 'Tak' : 'Nie',
+    szkola:        String(data.szkola || '').slice(0, 200),
+    o_sobie:       String(data.o_sobie || '').slice(0, 3000),
+    praca_z_ludzmi:String(data.praca_z_ludzmi || '').slice(0, 3000),
+    doswiadczenie: String(data.doswiadczenie || '').slice(0, 3000),
+    umiejetnosci_lista: Array.isArray(data.umiejetnosci_lista)
+      ? data.umiejetnosci_lista.slice(0, 20).map(v => String(v).slice(0, 100))
+      : [],
+    okres:         String(data.okres || '').slice(0, 100),
+    ograniczenia:  String(data.ograniczenia || '').slice(0, 1000),
+    dyspozycyjnosc: Array.isArray(data.dyspozycyjnosc)
+      ? data.dyspozycyjnosc.slice(0, 10).map(v => String(v).slice(0, 100))
+      : [],
+    preferowane_godziny: Array.isArray(data.preferowane_godziny)
+      ? data.preferowane_godziny.slice(0, 5).map(v => String(v).slice(0, 50))
+      : [],
+    angielski:     ['1','2','3','4'].includes(String(data.angielski)) ? data.angielski : '1',
+    niemiecki:     ['1','2','3','4'].includes(String(data.niemiecki)) ? data.niemiecki : '1',
+    czeski:        ['1','2','3','4'].includes(String(data.czeski))    ? data.czeski    : '1',
+    napoj:         String(data.napoj || '').slice(0, 3000),
+    sytuacja_kawa: String(data.sytuacja_kawa || '').slice(0, 3000),
+    sytuacja_sniadanie: String(data.sytuacja_sniadanie || '').slice(0, 3000),
+    dodatkowe:     String(data.dodatkowe || '').slice(0, 2000),
+    zrodlo:        String(data.zrodlo || '').slice(0, 50),
+  };
   list.unshift(entry);
   fs.writeFileSync(candFile(recruitmentId), JSON.stringify(list, null, 2));
   return entry;
@@ -72,10 +188,10 @@ function createTransporter() {
   });
 }
 
-// ── Email rekruter ────────────────────────────────────────────────
+// ── EMAIL REKRUTER ────────────────────────────────────────────────
 function buildRecruiterEmail(data, rec) {
-  const poz = v => ({'1':'Nie znam','2':'Podstawowy','3':'Komunikatywny','4':'Biegły'}[v]||v);
-  const lst = v => !v?'—':Array.isArray(v)?v.join(', '):v;
+  const poz = v => ({'1':'Nie znam','2':'Podstawowy','3':'Komunikatywny','4':'Biegły'}[v]||esc(v));
+  const lst = v => !v ? '—' : Array.isArray(v) ? v.map(esc).join(', ') : esc(v);
   return `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
 <style>body{font-family:Arial,sans-serif;color:#1a1a1a;background:#f2ede8;margin:0;padding:24px 16px}
 .card{background:#fff;border-radius:12px;max-width:700px;margin:0 auto;overflow:hidden;border:1px solid #e8e4df}
@@ -96,45 +212,44 @@ function buildRecruiterEmail(data, rec) {
 .meta{padding:14px 28px;border-top:1px solid #f0ede9;background:#faf9f7;font-size:12px;color:#aaa}
 </style></head><body><div class="card">
 <div class="hdr"><img src="${logoSrc}" alt="cukru"><div>
-<h1>${data.imie_nazwisko}</h1>
-<p>Rekrutacja: ${rec.name} &mdash; ${new Date().toLocaleString('pl-PL')}</p></div></div>
+<h1>${esc(data.imie_nazwisko)}</h1>
+<p>Rekrutacja: ${esc(rec.name)} &mdash; ${new Date().toLocaleString('pl-PL')}</p></div></div>
 <div class="body">
 <div class="sec"><div class="st">Dane kontaktowe</div>
-<div class="row"><span class="lbl">Telefon</span><span class="val">${data.telefon}</span></div>
-<div class="row"><span class="lbl">E-mail</span><span class="val">${data.email}</span></div>
-<div class="row"><span class="lbl">Wiek</span><span class="val">${data.wiek} lat</span></div>
-<div class="row"><span class="lbl">Uczeń / student</span><span class="val">${data.student}</span></div>
-${data.szkola?`<div class="row"><span class="lbl">Szkoła</span><span class="val">${data.szkola}</span></div>`:''}
+<div class="row"><span class="lbl">Telefon</span><span class="val">${esc(data.telefon)}</span></div>
+<div class="row"><span class="lbl">E-mail</span><span class="val">${esc(data.email)}</span></div>
+<div class="row"><span class="lbl">Wiek</span><span class="val">${esc(data.wiek)} lat</span></div>
+<div class="row"><span class="lbl">Uczeń / student</span><span class="val">${esc(data.student)}</span></div>
+${data.szkola ? `<div class="row"><span class="lbl">Szkoła</span><span class="val">${esc(data.szkola)}</span></div>` : ''}
 </div>
 <div class="sec"><div class="st">Motywacja</div>
-<div class="q">O sobie i dlaczego cukru.cafe</div><div class="ans">${data.o_sobie}</div>
-<div class="q">Co lubi w pracy z ludźmi</div><div class="ans">${data.praca_z_ludzmi}</div></div>
+<div class="q">O sobie i dlaczego cukru.cafe</div><div class="ans">${esc(data.o_sobie)}</div>
+<div class="q">Co lubi w pracy z ludźmi</div><div class="ans">${esc(data.praca_z_ludzmi)}</div></div>
 <div class="sec"><div class="st">Doświadczenie</div>
-<div class="ans">${data.doswiadczenie||'—'}</div>
-<div>${lst(data.umiejetnosci_lista)!=='—'?lst(data.umiejetnosci_lista).split(',').map(u=>`<span class="b">${u.trim()}</span>`).join(''):'—'}</div></div>
+<div class="ans">${esc(data.doswiadczenie)||'—'}</div>
+<div>${data.umiejetnosci_lista?.length ? data.umiejetnosci_lista.map(u=>`<span class="b">${esc(u)}</span>`).join('') : '—'}</div></div>
 <div class="sec"><div class="st">Dostępność</div>
-<div class="row"><span class="lbl">Okres</span><span class="val">${data.okres}</span></div>
-<div class="row"><span class="lbl">Godziny tygodniowo</span><span class="val">${data.godziny}</span></div>
-<div class="row"><span class="lbl">Preferowane godziny</span><span class="val">${lst(data.preferowane_godziny)}</span></div>
-${data.ograniczenia?`<div class="ans">${data.ograniczenia}</div>`:''}</div>
+<div class="row"><span class="lbl">Okres</span><span class="val">${esc(data.okres)}</span></div>
+${data.ograniczenia ? `<div class="ans">${esc(data.ograniczenia)}</div>` : ''}
+</div>
 <div class="sec"><div class="st">Dyspozycyjność</div>
-<div>${lst(data.dyspozycyjnosc)!=='—'?lst(data.dyspozycyjnosc).split(',').map(u=>`<span class="b">${u.trim()}</span>`).join(''):'—'}</div></div>
+<div>${data.dyspozycyjnosc?.length ? data.dyspozycyjnosc.map(u=>`<span class="b">${esc(u)}</span>`).join('') : '—'}</div></div>
 <div class="sec"><div class="st">Języki</div>
 <div class="row"><span class="lbl">Angielski</span><span class="val">${poz(data.angielski)}</span></div>
 <div class="row"><span class="lbl">Niemiecki</span><span class="val">${poz(data.niemiecki)}</span></div>
 <div class="row"><span class="lbl">Czeski</span><span class="val">${poz(data.czeski)}</span></div></div>
 <div class="sec"><div class="st">Zadania kreatywne</div>
-<div class="q">Propozycja napoju</div><div class="ans">${data.napoj}</div>
-<div class="q">Klient niezadowolony z kawy</div><div class="ans">${data.sytuacja_kawa}</div>
-<div class="q">Klient czekający na śniadanie</div><div class="ans">${data.sytuacja_sniadanie}</div></div>
-${data.dodatkowe?`<div class="sec"><div class="st">Dodatkowe</div><div class="ans">${data.dodatkowe}</div></div>`:''}
-<div class="sec"><div class="row"><span class="lbl">Źródło</span><span class="val">${data.zrodlo||'—'}</span></div></div>
-</div><div class="meta">cukru.cafe &mdash; ${rec.name}</div></div></body></html>`;
+<div class="q">Propozycja napoju</div><div class="ans">${esc(data.napoj)}</div>
+<div class="q">Klient niezadowolony z kawy</div><div class="ans">${esc(data.sytuacja_kawa)}</div>
+<div class="q">Klient czekający na śniadanie</div><div class="ans">${esc(data.sytuacja_sniadanie)}</div></div>
+${data.dodatkowe ? `<div class="sec"><div class="st">Dodatkowe</div><div class="ans">${esc(data.dodatkowe)}</div></div>` : ''}
+<div class="sec"><div class="row"><span class="lbl">Źródło</span><span class="val">${esc(data.zrodlo)||'—'}</span></div></div>
+</div><div class="meta">cukru.cafe &mdash; ${esc(rec.name)}</div></div></body></html>`;
 }
 
-// ── Email kandydat ────────────────────────────────────────────────
+// ── EMAIL KANDYDAT ────────────────────────────────────────────────
 function buildConfirmationEmail(data) {
-  const imie = data.imie_nazwisko.split(' ')[0];
+  const imie = esc(data.imie_nazwisko.split(' ')[0]);
   return `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
 <style>body{font-family:Arial,sans-serif;color:#1a1a1a;background:#f2ede8;margin:0;padding:24px 16px}
 .card{background:#fff;border-radius:12px;max-width:560px;margin:0 auto;overflow:hidden;border:1px solid #e8e4df}
@@ -161,7 +276,7 @@ function buildConfirmationEmail(data) {
 </div></body></html>`;
 }
 
-// ── Apps Script generator ─────────────────────────────────────────
+// ── APPS SCRIPT GENERATOR ─────────────────────────────────────────
 function generateAppsScript(rec) {
   const duties = rec.duties.map(d => `    '• ${d}\\n' +`).join('\n');
   return `function createRecruitmentForm() {
@@ -203,8 +318,6 @@ ${duties}
 
   form.addSectionHeaderItem().setTitle('Dostępność');
   form.addMultipleChoiceItem().setTitle('Na jaki okres szukasz pracy?').setChoiceValues(['Sezonowo','Minimum rok','Dłużej','Nie wiem jeszcze']).setRequired(true);
-  form.addMultipleChoiceItem().setTitle('Ile godzin tygodniowo?').setChoiceValues(['Do 20h','20–30h','Powyżej 30h','Elastycznie']).setRequired(true);
-  form.addCheckboxItem().setTitle('Preferowane godziny').setChoiceValues(['Rano (6:00–7:00)','Południe i popołudnie','Elastycznie']).setRequired(true);
   form.addParagraphTextItem().setTitle('Ograniczenia dostępności');
 
   form.addSectionHeaderItem().setTitle('Umiejętności');
@@ -234,29 +347,42 @@ ${duties}
 }`;
 }
 
-// ── Public routes ─────────────────────────────────────────────────
+// ── PUBLIC ROUTES ─────────────────────────────────────────────────
+// Zwracamy tylko pola potrzebne do wyświetlenia formularza (NIE customScript)
+function publicRecruitmentView(rec) {
+  return {
+    id: rec.id, slug: rec.slug, name: rec.name,
+    jobTitle: rec.jobTitle, workType: rec.workType,
+    description: rec.description, duties: rec.duties, rates: rec.rates,
+  };
+}
+
 app.get('/api/recruitment/default', (req, res) => {
   const rec = getDefaultRecruitment();
-  if (!rec) return res.status(404).json({ error: 'Brak aktywnej rekrutacji' });
-  res.json(rec);
+  if (!rec || !rec.active) return res.status(404).json({ error: 'Brak aktywnej rekrutacji' });
+  res.json(publicRecruitmentView(rec));
 });
 
 app.get('/api/recruitment/:slug', (req, res) => {
+  // Walidacja slug: tylko litery, cyfry, myślniki
+  if (!/^[a-z0-9-]+$/i.test(req.params.slug)) return res.status(400).json({ error: 'Nieprawidłowy slug' });
   const rec = loadRecruitments().find(r => r.slug === req.params.slug && r.active);
   if (!rec) return res.status(404).json({ error: 'Nie znaleziono rekrutacji' });
-  res.json(rec);
+  res.json(publicRecruitmentView(rec));
 });
 
 app.get('/r/:slug', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ── Submit ────────────────────────────────────────────────────────
-app.post('/submit/:recruitmentId', async (req, res) => {
+// ── SUBMIT ────────────────────────────────────────────────────────
+app.post('/submit/:recruitmentId', submitLimiter, async (req, res) => {
   const rec = getRecruitment(req.params.recruitmentId);
-  if (!rec) return res.status(404).json({ error: 'Nie znaleziono rekrutacji' });
+  if (!rec || !rec.active) return res.status(404).json({ error: 'Nie znaleziono rekrutacji' });
 
   const data = req.body;
+
+  // Walidacja pól wymaganych
   const required = ['imie_nazwisko','telefon','email','wiek','student',
     'o_sobie','praca_z_ludzmi','okres',
     'angielski','niemiecki','czeski',
@@ -264,55 +390,90 @@ app.post('/submit/:recruitmentId', async (req, res) => {
   const missing = required.filter(f => !data[f] || data[f].toString().trim() === '');
   if (missing.length) return res.status(400).json({ error: 'Wypełnij wszystkie wymagane pola.', missing });
 
-  saveCandidate(rec.id, data);
+  // Walidacja formatu
+  if (!isValidEmail(data.email)) return res.status(400).json({ error: 'Nieprawidłowy adres e-mail.' });
+  if (!isValidAge(data.wiek)) return res.status(400).json({ error: 'Nieprawidłowy wiek.' });
+
+  const entry = saveCandidate(rec.id, data);
 
   try {
     const t = createTransporter();
-    await t.sendMail({ from: `"cukru.cafe Rekrutacja" <${process.env.SMTP_USER}>`, to: process.env.MAIL_TO, subject: `Nowe zgłoszenie [${rec.name}]: ${data.imie_nazwisko}`, html: buildRecruiterEmail(data, rec) });
-    await t.sendMail({ from: `"cukru.cafe" <${process.env.SMTP_USER}>`, to: data.email, subject: 'Potwierdzenie zgłoszenia – cukru.cafe', html: buildConfirmationEmail(data) });
+    await t.sendMail({
+      from: `"cukru.cafe Rekrutacja" <${process.env.SMTP_USER}>`,
+      to: process.env.MAIL_TO,
+      subject: `Nowe zgłoszenie [${rec.name}]: ${entry.imie_nazwisko}`,
+      html: buildRecruiterEmail(entry, rec),
+    });
+    await t.sendMail({
+      from: `"cukru.cafe" <${process.env.SMTP_USER}>`,
+      to: entry.email,
+      subject: 'Potwierdzenie zgłoszenia – cukru.cafe',
+      html: buildConfirmationEmail(entry),
+    });
     res.json({ success: true });
   } catch (err) {
     console.error('SMTP error:', err.message);
-    res.json({ success: true, warning: 'Zgłoszenie zapisane, błąd wysyłki maila.' });
+    // Kandydat zapisany — nie informujemy o szczegółach błędu
+    res.json({ success: true });
   }
 });
 
-// ── Auth middleware ───────────────────────────────────────────────
+// ── AUTH MIDDLEWARE ───────────────────────────────────────────────
 function requireAuth(req, res, next) {
   if (req.session?.admin) return next();
   res.status(401).json({ error: 'Brak dostępu' });
 }
 
-app.post('/admin/login', (req, res) => {
+app.post('/admin/login', loginLimiter, (req, res) => {
   const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'Podaj login i hasło' });
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-    req.session.admin = true; res.json({ success: true });
-  } else res.status(401).json({ error: 'Nieprawidłowy login lub hasło' });
+    req.session.regenerate(err => {           // nowe session ID po zalogowaniu
+      if (err) return res.status(500).json({ error: 'Błąd sesji' });
+      req.session.admin = true;
+      res.json({ success: true });
+    });
+  } else {
+    // Stały czas odpowiedzi niezależnie od tego czy user istnieje
+    setTimeout(() => res.status(401).json({ error: 'Nieprawidłowy login lub hasło' }), 300);
+  }
 });
-app.post('/admin/logout', (req, res) => { req.session.destroy(); res.json({ success: true }); });
-app.get('/admin/check', (req, res) => res.json({ loggedIn: !!(req.session?.admin) }));
 
-// ── Admin: rekrutacje ─────────────────────────────────────────────
-app.get('/admin/recruitments', requireAuth, (req, res) => {
+app.post('/admin/logout', requireAuth, (req, res) => {
+  req.session.destroy(() => res.json({ success: true }));
+});
+
+app.get('/admin/check', (req, res) => {
+  res.json({ loggedIn: !!(req.session?.admin) });
+});
+
+// ── ADMIN: REKRUTACJE ─────────────────────────────────────────────
+app.get('/admin/recruitments', requireAuth, adminLimiter, (req, res) => {
   const list = loadRecruitments().map(r => ({ ...r, candidateCount: countCandidates(r.id) }));
   res.json(list);
 });
 
-app.post('/admin/recruitments', requireAuth, (req, res) => {
+app.post('/admin/recruitments', requireAuth, adminLimiter, (req, res) => {
   const list = loadRecruitments();
   const maxId = list.reduce((m, r) => Math.max(m, r.id), 0);
+  // Walidacja slug
+  const slug = String(req.body.slug || `rekrutacja-${maxId + 1}`).replace(/[^a-z0-9-]/gi, '-').toLowerCase();
   const rec = {
     id: maxId + 1,
-    slug: req.body.slug || `rekrutacja-${maxId + 1}`,
-    name: req.body.name || `Rekrutacja #${maxId + 1}`,
+    slug,
+    name: String(req.body.name || `Rekrutacja #${maxId + 1}`).slice(0, 200),
     isDefault: false,
     active: true,
     createdAt: new Date().toISOString(),
-    jobTitle: req.body.jobTitle || 'barista / obsługa klienta',
-    workType: req.body.workType || 'Pełen etat',
-    description: req.body.description || '',
-    duties: req.body.duties || [],
-    rates: req.body.rates || { trial: 25, onboarding: 27, after: 30 }
+    jobTitle: String(req.body.jobTitle || 'barista / obsługa klienta').slice(0, 200),
+    workType: String(req.body.workType || 'Pełen etat').slice(0, 100),
+    description: String(req.body.description || '').slice(0, 5000),
+    duties: Array.isArray(req.body.duties) ? req.body.duties.slice(0, 20).map(d => String(d).slice(0, 200)) : [],
+    rates: {
+      trial:      parseFloat(req.body.rates?.trial)      || 25,
+      onboarding: parseFloat(req.body.rates?.onboarding) || 27,
+      after:      parseFloat(req.body.rates?.after)      || 30,
+    }
   };
   list.push(rec);
   saveRecruitments(list);
@@ -320,55 +481,80 @@ app.post('/admin/recruitments', requireAuth, (req, res) => {
   res.json(rec);
 });
 
-app.put('/admin/recruitments/:id', requireAuth, (req, res) => {
+app.put('/admin/recruitments/:id', requireAuth, adminLimiter, (req, res) => {
   const list = loadRecruitments();
   const idx = list.findIndex(r => r.id === parseInt(req.params.id));
   if (idx === -1) return res.status(404).json({ error: 'Nie znaleziono' });
-  list[idx] = { ...list[idx], ...req.body, id: list[idx].id, createdAt: list[idx].createdAt };
+  const slug = String(req.body.slug || list[idx].slug).replace(/[^a-z0-9-]/gi, '-').toLowerCase();
+  list[idx] = {
+    ...list[idx],
+    slug,
+    name:        String(req.body.name        || list[idx].name).slice(0, 200),
+    jobTitle:    String(req.body.jobTitle    || list[idx].jobTitle).slice(0, 200),
+    workType:    String(req.body.workType    || list[idx].workType).slice(0, 100),
+    description: String(req.body.description || list[idx].description).slice(0, 5000),
+    duties: Array.isArray(req.body.duties) ? req.body.duties.slice(0, 20).map(d => String(d).slice(0, 200)) : list[idx].duties,
+    active: typeof req.body.active === 'boolean' ? req.body.active : list[idx].active,
+    rates: {
+      trial:      parseFloat(req.body.rates?.trial)      || list[idx].rates.trial,
+      onboarding: parseFloat(req.body.rates?.onboarding) || list[idx].rates.onboarding,
+      after:      parseFloat(req.body.rates?.after)      || list[idx].rates.after,
+    }
+  };
   saveRecruitments(list);
   res.json(list[idx]);
 });
 
-app.post('/admin/recruitments/:id/default', requireAuth, (req, res) => {
+app.post('/admin/recruitments/:id/default', requireAuth, adminLimiter, (req, res) => {
   const list = loadRecruitments();
+  if (!list.find(r => r.id === parseInt(req.params.id))) return res.status(404).json({ error: 'Nie znaleziono' });
   list.forEach(r => r.isDefault = r.id === parseInt(req.params.id));
   saveRecruitments(list);
   res.json({ success: true });
 });
 
-app.delete('/admin/recruitments/:id', requireAuth, (req, res) => {
+app.delete('/admin/recruitments/:id', requireAuth, adminLimiter, (req, res) => {
   let list = loadRecruitments();
+  const rec = list.find(r => r.id === parseInt(req.params.id));
+  if (!rec) return res.status(404).json({ error: 'Nie znaleziono' });
+  if (rec.isDefault) return res.status(400).json({ error: 'Nie można usunąć domyślnej rekrutacji' });
   list = list.filter(r => r.id !== parseInt(req.params.id));
   saveRecruitments(list);
   res.json({ success: true });
 });
 
-app.get('/admin/recruitments/:id/script', requireAuth, (req, res) => {
+app.get('/admin/recruitments/:id/script', requireAuth, adminLimiter, (req, res) => {
   const rec = getRecruitment(req.params.id);
   if (!rec) return res.status(404).json({ error: 'Nie znaleziono' });
   res.json({ generated: generateAppsScript(rec), custom: rec.customScript || null });
 });
 
-app.put('/admin/recruitments/:id/script', requireAuth, (req, res) => {
+app.put('/admin/recruitments/:id/script', requireAuth, adminLimiter, (req, res) => {
   const list = loadRecruitments();
   const idx = list.findIndex(r => r.id === parseInt(req.params.id));
   if (idx === -1) return res.status(404).json({ error: 'Nie znaleziono' });
-  list[idx].customScript = req.body.script || null;
+  // Limit rozmiaru skryptu: 100kb
+  const script = req.body.script ? String(req.body.script).slice(0, 100000) : null;
+  list[idx].customScript = script;
   saveRecruitments(list);
   res.json({ success: true });
 });
 
-// ── Admin: kandydaci ──────────────────────────────────────────────
-app.get('/admin/candidates', requireAuth, (req, res) => {
+// ── ADMIN: KANDYDACI ──────────────────────────────────────────────
+app.get('/admin/candidates', requireAuth, adminLimiter, (req, res) => {
   const { recruitmentId } = req.query;
-  if (recruitmentId) return res.json(loadCandidates(recruitmentId));
+  if (recruitmentId) {
+    if (isNaN(parseInt(recruitmentId))) return res.status(400).json({ error: 'Nieprawidłowe ID' });
+    return res.json(loadCandidates(recruitmentId));
+  }
   const all = loadRecruitments().flatMap(r => loadCandidates(r.id));
-  all.sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+  all.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
   res.json(all);
 });
 
-app.delete('/admin/candidates/:id', requireAuth, (req, res) => {
+app.delete('/admin/candidates/:id', requireAuth, adminLimiter, (req, res) => {
   const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: 'Nieprawidłowe ID' });
   loadRecruitments().forEach(r => {
     const list = loadCandidates(r.id).filter(c => c.id !== id);
     fs.writeFileSync(candFile(r.id), JSON.stringify(list, null, 2));
@@ -377,6 +563,9 @@ app.delete('/admin/candidates/:id', requireAuth, (req, res) => {
 });
 
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+
+// ── 404 ───────────────────────────────────────────────────────────
+app.use((req, res) => res.status(404).json({ error: 'Nie znaleziono' }));
 
 app.listen(PORT, () => {
   console.log(`cukru.cafe rekrutacja: http://localhost:${PORT}`);
