@@ -439,13 +439,16 @@ app.post('/admin/login', loginLimiter, (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Podaj login i hasło' });
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-    req.session.regenerate(err => {           // nowe session ID po zalogowaniu
+    req.session.regenerate(err => {
       if (err) return res.status(500).json({ error: 'Błąd sesji' });
       req.session.admin = true;
-      res.json({ success: true });
+      // Wymuszamy zapis sesji na dysk PRZED odpowiedzią
+      req.session.save(saveErr => {
+        if (saveErr) return res.status(500).json({ error: 'Błąd zapisu sesji' });
+        res.json({ success: true });
+      });
     });
   } else {
-    // Stały czas odpowiedzi niezależnie od tego czy user istnieje
     setTimeout(() => res.status(401).json({ error: 'Nieprawidłowy login lub hasło' }), 300);
   }
 });
