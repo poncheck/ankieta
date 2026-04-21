@@ -1,7 +1,6 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const session = require('express-session');
-const FileStore = require('session-file-store')(session);
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
@@ -67,16 +66,7 @@ app.use(express.json({ limit: '512kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── SESSION ───────────────────────────────────────────────────────
-const SESSIONS_DIR = path.join(DATA, 'sessions');
-if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR);
-
 app.use(session({
-  store: new FileStore({
-    path: SESSIONS_DIR,
-    ttl: 8 * 60 * 60,       // 8 godzin w sekundach
-    retries: 1,
-    logFn: () => {},          // wycisza logi session-file-store
-  }),
   secret: process.env.SESSION_SECRET || (() => { throw new Error('SESSION_SECRET wymagany w .env'); })(),
   resave: false,
   saveUninitialized: false,
@@ -85,7 +75,7 @@ app.use(session({
     maxAge: 8 * 60 * 60 * 1000,
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
+    sameSite: 'lax'
   }
 }));
 
@@ -440,13 +430,7 @@ app.post('/admin/login', loginLimiter, (req, res) => {
   if (!username || !password) return res.status(400).json({ error: 'Podaj login i hasło' });
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
     req.session.admin = true;
-    req.session.save(err => {
-      if (err) {
-        console.error('Session save error:', err);
-        return res.status(500).json({ error: 'Błąd zapisu sesji' });
-      }
-      res.json({ success: true });
-    });
+    res.json({ success: true });
   } else {
     setTimeout(() => res.status(401).json({ error: 'Nieprawidłowy login lub hasło' }), 300);
   }

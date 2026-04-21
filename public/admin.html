@@ -341,12 +341,12 @@ const isToday = iso => new Date(iso).toDateString() === new Date().toDateString(
 // ── Auth ──────────────────────────────────────────────────────────
 async function doLogin() {
   const u = document.getElementById('lu').value, p = document.getElementById('lp').value;
-  const r = await fetch('/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+  const r = await fetch('/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p}),credentials:'same-origin'});
   if (r.ok) showPanel(); else document.getElementById('lerr').style.display='block';
 }
 document.getElementById('lp').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-async function doLogout() { await fetch('/admin/logout',{method:'POST'}); location.reload(); }
-async function checkAuth() { const r=await fetch('/admin/check'),d=await r.json(); if(d.loggedIn) showPanel(); }
+async function doLogout() { await fetch('/admin/logout',{method:'POST',credentials:'same-origin'}); location.reload(); }
+async function checkAuth() { const r=await fetch('/admin/check',{credentials:'same-origin'}),d=await r.json(); if(d.loggedIn) showPanel(); }
 
 async function showPanel() {
   document.getElementById('login-wrap').style.display='none';
@@ -363,7 +363,7 @@ function switchTab(name) {
 
 // ── Rekrutacje ────────────────────────────────────────────────────
 async function loadRecruitments() {
-  const r = await fetch('/admin/recruitments'); recruitments = await r.json();
+  const r = await fetch('/admin/recruitments',{credentials:'same-origin'}); recruitments = await r.json();
   document.getElementById('badge-rec').textContent = recruitments.length;
   renderRecruitments();
   // populate filter
@@ -404,14 +404,14 @@ function renderRecruitments() {
 }
 
 async function setDefault(id) {
-  await fetch(`/admin/recruitments/${id}/default`,{method:'POST'});
+  await fetch(`/admin/recruitments/${id}/default`,{method:'POST',credentials:'same-origin'});
   await loadRecruitments();
 }
 
 async function deleteRecruitment(id) {
   const rec = recruitments.find(r=>r.id===id);
   if (!confirm(`Usunąć rekrutację "${rec.name}"? Kandydaci zostaną zachowani.`)) return;
-  await fetch(`/admin/recruitments/${id}`,{method:'DELETE'});
+  await fetch(`/admin/recruitments/${id}`,{method:'DELETE',credentials:'same-origin'});
   await loadRecruitments();
 }
 
@@ -481,7 +481,7 @@ async function saveRecruitment() {
   };
   const url = id ? `/admin/recruitments/${id}` : '/admin/recruitments';
   const method = id ? 'PUT' : 'POST';
-  await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body),credentials:'same-origin'});
   closeEditor(); await loadRecruitments();
 }
 
@@ -493,7 +493,7 @@ async function showScript(id) {
   currentScriptRecId = id;
   const rec = recruitments.find(r=>r.id===id);
   document.getElementById('script-rec-name').textContent = rec.name;
-  const r = await fetch(`/admin/recruitments/${id}/script`);
+  const r = await fetch(`/admin/recruitments/${id}/script`,{credentials:'same-origin'});
   const d = await r.json();
   currentGeneratedScript = d.generated;
   const editor = document.getElementById('script-editor');
@@ -528,6 +528,7 @@ async function saveScript() {
   try {
     const r = await fetch(`/admin/recruitments/${currentScriptRecId}/script`, {
       method: 'PUT',
+      credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ script })
     });
@@ -547,6 +548,7 @@ async function clearScript() {
   if (!confirm('Usunąć zapisany skrypt? Wróci do wygenerowanego automatycznie.')) return;
   await fetch(`/admin/recruitments/${currentScriptRecId}/script`, {
     method: 'PUT',
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ script: null })
   });
@@ -559,7 +561,7 @@ async function clearScript() {
 
 // ── Kandydaci ─────────────────────────────────────────────────────
 async function loadCandidates() {
-  const r = await fetch('/admin/candidates'); allCandidates = await r.json();
+  const r = await fetch('/admin/candidates',{credentials:'same-origin'}); allCandidates = await r.json();
   document.getElementById('badge-cand').textContent = allCandidates.length;
   renderStats(); renderCandidates();
 }
@@ -649,7 +651,7 @@ function closeCandModal() { document.getElementById('cand-overlay').classList.re
 
 async function deleteCand(id) {
   if(!confirm('Usunąć to zgłoszenie?')) return;
-  await fetch(`/admin/candidates/${id}`,{method:'DELETE'});
+  await fetch(`/admin/candidates/${id}`,{method:'DELETE',credentials:'same-origin'});
   await loadCandidates();
 }
 
