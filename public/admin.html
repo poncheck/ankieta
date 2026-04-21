@@ -230,17 +230,38 @@
 
 <!-- MODAL Apps Script -->
 <div class="overlay" id="script-overlay" onclick="if(event.target===this)closeScriptModal()">
-  <div class="modal">
+  <div class="modal" style="max-width:780px">
     <div class="modal-hdr">
-      <div><h2>Google Forms – Apps Script</h2><small id="script-rec-name"></small></div>
+      <div><h2>Apps Script – Google Forms</h2><small id="script-rec-name"></small></div>
       <button class="close-btn" onclick="closeScriptModal()">&#x2715;</button>
     </div>
-    <div class="modal-body">
-      <p style="font-size:13px;color:#666;margin:0 0 14px">Skopiuj kod, wklej do <a href="https://script.google.com" target="_blank" style="color:#1a1a1a">script.google.com</a>, wybierz funkcję <code>createRecruitmentForm</code> i uruchom.</p>
-      <div class="script-wrap">
-        <pre id="script-code"></pre>
-        <div class="script-actions">
-          <button class="copy-code-btn" onclick="copyScript()">Kopiuj kod</button>
+    <div class="modal-body" style="max-height:80vh">
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+        <div style="flex:1;font-size:13px;color:#666">Edytuj lub wklej własny skrypt. Zapisany skrypt jest przypisany do tej rekrutacji.</div>
+        <button class="btn" onclick="loadGeneratedScript()" style="font-size:12px;white-space:nowrap">&#x21BA; Wczytaj wygenerowany</button>
+        <button class="btn" onclick="copyScript()" style="font-size:12px;white-space:nowrap">Kopiuj</button>
+        <a href="https://script.google.com" target="_blank" class="btn" style="font-size:12px;white-space:nowrap;text-decoration:none;color:inherit">script.google.com &#x2197;</a>
+      </div>
+      <div style="background:#1a1a1a;border-radius:10px;overflow:hidden;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.08)">
+          <span style="font-size:11px;color:rgba(255,255,255,0.35);font-family:monospace">rekrutacja.gs</span>
+          <div style="display:flex;gap:5px">
+            <div style="width:10px;height:10px;border-radius:50%;background:#ff5f57"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#febc2e"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#28c840"></div>
+          </div>
+        </div>
+        <textarea id="script-editor" spellcheck="false"
+          style="width:100%;min-height:380px;background:transparent;border:none;outline:none;
+                 color:#a8d8a8;font-family:'Courier New',monospace;font-size:12px;
+                 line-height:1.6;padding:16px;resize:vertical;box-sizing:border-box;tab-size:2"
+          placeholder="Wklej lub edytuj skrypt Apps Script..."></textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+        <span id="script-save-info" style="font-size:12px;color:#aaa"></span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-danger" onclick="clearScript()" style="font-size:13px">Usuń zapisany</button>
+          <button class="btn btn-dark" onclick="saveScript()" style="font-size:13px">Zapisz skrypt</button>
         </div>
       </div>
     </div>
@@ -366,6 +387,7 @@ function renderRecruitments() {
         ${rec.isDefault?'<span class="badge badge-default">Domyślna</span>':''}
         ${rec.active?'<span class="badge badge-green">Aktywna</span>':'<span class="badge">Nieaktywna</span>'}
         <span class="badge">/r/${rec.slug}</span>
+        ${rec.customScript?'<span class="badge badge-blue">Własny skrypt</span>':''}
       </div>
       <div class="rec-card-stats">
         <div class="rec-stat"><strong>${rec.candidateCount||0}</strong>kandydatów</div>
@@ -464,18 +486,66 @@ async function saveRecruitment() {
 }
 
 // ── Apps Script ───────────────────────────────────────────────────
+let currentScriptRecId = null;
+let currentGeneratedScript = '';
+
 async function showScript(id) {
+  currentScriptRecId = id;
   const rec = recruitments.find(r=>r.id===id);
   document.getElementById('script-rec-name').textContent = rec.name;
-  const r = await fetch(`/admin/recruitments/${id}/script`); const d = await r.json();
-  document.getElementById('script-code').textContent = d.script;
+  const r = await fetch(`/admin/recruitments/${id}/script`);
+  const d = await r.json();
+  currentGeneratedScript = d.generated;
+  const editor = document.getElementById('script-editor');
+  // Pokaż zapisany custom lub wygenerowany
+  editor.value = d.custom || d.generated;
+  const info = document.getElementById('script-save-info');
+  info.textContent = d.custom ? '✓ Masz zapisany własny skrypt' : 'Aktualnie używany: skrypt wygenerowany automatycznie';
+  info.style.color = d.custom ? '#2e7d32' : '#aaa';
   document.getElementById('script-overlay').classList.add('open');
 }
+
 function closeScriptModal() { document.getElementById('script-overlay').classList.remove('open'); }
+
+function loadGeneratedScript() {
+  document.getElementById('script-editor').value = currentGeneratedScript;
+  document.getElementById('script-save-info').textContent = 'Wczytano wygenerowany – kliknij Zapisz aby przypiąć';
+  document.getElementById('script-save-info').style.color = '#aaa';
+}
+
 function copyScript() {
-  navigator.clipboard.writeText(document.getElementById('script-code').textContent);
-  document.querySelector('.copy-code-btn').textContent='Skopiowano!';
-  setTimeout(()=>document.querySelector('.copy-code-btn').textContent='Kopiuj kod',2000);
+  navigator.clipboard.writeText(document.getElementById('script-editor').value);
+  const btn = event.target;
+  btn.textContent = 'Skopiowano!';
+  setTimeout(() => btn.textContent = 'Kopiuj', 2000);
+}
+
+async function saveScript() {
+  const script = document.getElementById('script-editor').value.trim();
+  if (!script) return;
+  await fetch(`/admin/recruitments/${currentScriptRecId}/script`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ script })
+  });
+  const info = document.getElementById('script-save-info');
+  info.textContent = '✓ Skrypt zapisany';
+  info.style.color = '#2e7d32';
+  await loadRecruitments();
+}
+
+async function clearScript() {
+  if (!confirm('Usunąć zapisany skrypt? Wróci do wygenerowanego automatycznie.')) return;
+  await fetch(`/admin/recruitments/${currentScriptRecId}/script`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ script: null })
+  });
+  document.getElementById('script-editor').value = currentGeneratedScript;
+  const info = document.getElementById('script-save-info');
+  info.textContent = 'Usunięto – aktualnie używany: wygenerowany automatycznie';
+  info.style.color = '#aaa';
+  await loadRecruitments();
 }
 
 // ── Kandydaci ─────────────────────────────────────────────────────

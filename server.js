@@ -346,7 +346,16 @@ app.delete('/admin/recruitments/:id', requireAuth, (req, res) => {
 app.get('/admin/recruitments/:id/script', requireAuth, (req, res) => {
   const rec = getRecruitment(req.params.id);
   if (!rec) return res.status(404).json({ error: 'Nie znaleziono' });
-  res.json({ script: generateAppsScript(rec) });
+  res.json({ generated: generateAppsScript(rec), custom: rec.customScript || null });
+});
+
+app.put('/admin/recruitments/:id/script', requireAuth, (req, res) => {
+  const list = loadRecruitments();
+  const idx = list.findIndex(r => r.id === parseInt(req.params.id));
+  if (idx === -1) return res.status(404).json({ error: 'Nie znaleziono' });
+  list[idx].customScript = req.body.script || null;
+  saveRecruitments(list);
+  res.json({ success: true });
 });
 
 // ── Admin: kandydaci ──────────────────────────────────────────────
