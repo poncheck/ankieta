@@ -10,6 +10,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA = path.join(__dirname, 'data');
 
+// Zaufaj proxy (nginx) – niezbędne gdy SSL terminowany jest przez nginx
+app.set('trust proxy', 1);
+
 if (!fs.existsSync(DATA)) fs.mkdirSync(DATA);
 
 // ── SECURITY HEADERS (helmet) ─────────────────────────────────────
@@ -74,7 +77,7 @@ app.use(session({
   cookie: {
     maxAge: 8 * 60 * 60 * 1000,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false,   // nginx obsługuje HTTPS – tutaj niepotrzebne
     sameSite: 'lax'
   }
 }));
