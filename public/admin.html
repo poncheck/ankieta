@@ -522,16 +522,25 @@ function copyScript() {
 
 async function saveScript() {
   const script = document.getElementById('script-editor').value.trim();
-  if (!script) return;
-  await fetch(`/admin/recruitments/${currentScriptRecId}/script`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ script })
-  });
-  const info = document.getElementById('script-save-info');
-  info.textContent = '✓ Skrypt zapisany';
-  info.style.color = '#2e7d32';
-  await loadRecruitments();
+  if (!script) { alert('Edytor jest pusty.'); return; }
+  const btn = document.querySelector('[onclick="saveScript()"]');
+  btn.disabled = true; btn.textContent = 'Zapisuję...';
+  try {
+    const r = await fetch(`/admin/recruitments/${currentScriptRecId}/script`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ script })
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const info = document.getElementById('script-save-info');
+    info.textContent = '✓ Skrypt zapisany';
+    info.style.color = '#2e7d32';
+    await loadRecruitments();
+  } catch(e) {
+    alert('Błąd zapisu: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Zapisz skrypt';
+  }
 }
 
 async function clearScript() {

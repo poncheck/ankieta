@@ -10,8 +10,8 @@ const DATA = path.join(__dirname, 'data');
 
 if (!fs.existsSync(DATA)) fs.mkdirSync(DATA);
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'cukru-secret-2024',
@@ -258,7 +258,7 @@ app.post('/submit/:recruitmentId', async (req, res) => {
 
   const data = req.body;
   const required = ['imie_nazwisko','telefon','email','wiek','student',
-    'o_sobie','praca_z_ludzmi','okres','godziny',
+    'o_sobie','praca_z_ludzmi','okres',
     'angielski','niemiecki','czeski',
     'napoj','sytuacja_kawa','sytuacja_sniadanie','rodo'];
   const missing = required.filter(f => !data[f] || data[f].toString().trim() === '');
