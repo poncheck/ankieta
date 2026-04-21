@@ -241,6 +241,7 @@
         <button class="btn" onclick="loadGeneratedScript()" style="font-size:12px;white-space:nowrap">&#x21BA; Wczytaj wygenerowany</button>
         <button class="btn" onclick="copyScript()" style="font-size:12px;white-space:nowrap">Kopiuj</button>
         <a href="https://script.google.com" target="_blank" class="btn" style="font-size:12px;white-space:nowrap;text-decoration:none;color:inherit">script.google.com &#x2197;</a>
+        <button class="btn btn-dark" onclick="applyScriptToForm()" style="font-size:12px;white-space:nowrap">&#x2713; Zastosuj na stronie WWW</button>
       </div>
       <div style="background:#1a1a1a;border-radius:10px;overflow:hidden;margin-bottom:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.08)">
@@ -541,6 +542,31 @@ async function saveScript() {
     alert('Błąd zapisu: ' + e.message);
   } finally {
     btn.disabled = false; btn.textContent = 'Zapisz skrypt';
+  }
+}
+
+async function applyScriptToForm() {
+  const script = document.getElementById('script-editor').value.trim();
+  if (!script) { alert('Edytor jest pusty.'); return; }
+  const btn = document.querySelector('[onclick="applyScriptToForm()"]');
+  btn.disabled = true; btn.textContent = 'Przetwarzam...';
+  try {
+    const r = await fetch(`/admin/recruitments/${currentScriptRecId}/apply-script`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ script })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Błąd');
+    const info = document.getElementById('script-save-info');
+    info.textContent = `✓ Zastosowano ${d.count} pytań na stronie WWW`;
+    info.style.color = '#2e7d32';
+    await loadRecruitments();
+  } catch(e) {
+    alert('Błąd: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '✓ Zastosuj na stronie WWW';
   }
 }
 

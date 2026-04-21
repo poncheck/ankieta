@@ -358,6 +358,7 @@ function publicRecruitmentView(rec) {
     id: rec.id, slug: rec.slug, name: rec.name,
     jobTitle: rec.jobTitle, workType: rec.workType,
     description: rec.description, duties: rec.duties, rates: rec.rates,
+    questions: rec.questions || null,
   };
 }
 
@@ -523,6 +524,110 @@ app.delete('/admin/recruitments/:id', requireAuth, adminLimiter, (req, res) => {
   res.json({ success: true });
 });
 
+
+// ── PARSER APPS SCRIPT → PYTANIA ─────────────────────────────────
+function parseAppsScript(script) {
+  const questions = [];
+  const lines = script.split('\n');
+  let i = 0;
+
+  // Zbieramy bloki: kolejne linie do średnika / zamknięcia
+  const fullScript = script.replace(/\/\/[^\n]*/g, ''); // usuń komentarze
+
+  // Wyciągamy wszystkie wywołania setTitle
+  const sectionRe = /addSectionHeaderItem\s*\(\s*\)[^;]*\.setTitle\s*\(\s*(['"`])(.*?)\1\s*\)/gs;
+  const textRe     = /addTextItem\s*\(\s*\)([^;]*)/gs;
+  const paraRe     = /addParagraphTextItem\s*\(\s*\)([^;]*)/gs;
+  const scaleRe    = /addScaleItem\s*\(\s*\)([^;]*)/gs;
+
+  // Helper: wyciągnij wartość setTitle/setHelpText/setRequired z łańcucha metod
+  function getChainValue(chain, method) {
+    const re = new RegExp(`\.${method}\\s*\\(\\s*(['"\`])(.*?)\\1\\s*\\)`, 's');
+    const m = chain.match(re);
+    return m ? m[2] : null;
+  }
+  function getRequired(chain) {
+    return /\.setRequired\s*\(\s*true\s*\)/.test(chain);
+  }
+  function getBounds(chain) {
+    const m = chain.match(/\.setBounds\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/);
+    return m ? { min: parseInt(m[1]), max: parseInt(m[2]) } : { min: 1, max: 4 };
+  }
+  function getLabels(chain) {
+    const m = chain.match(/\.setLabels\s*\(\s*['"`](.*?)['"`]\s*,\s*['"`](.*?)['"`]\s*\)/);
+    return m ? { min: m[1], max: m[2] } : { min: 'Min', max: 'Max' };
+  }
+
+  // Parsuj sekcje i pytania w kolejności wystąpienia
+  // Zamiast oddzielnych regex-ów, idź przez token-by-token
+  const tokenRe = /form\.add(SectionHeader|Text|ParagraphText|Scale|MultipleChoice|Checkbox)Item\s*\(\s*\)/g;
+  let match;
+
+  while ((match = tokenRe.exec(fullScript)) !== null) {
+    const type = match[1];
+    const start = match.index;
+    // Wyciągnij blok od tego miejsca do następnego `form.add` lub końca
+    const rest = fullScript.slice(start + match[0].length);
+
+    // Znajdź koniec bloku (następne `form.add` lub koniec)
+    const nextAdd = rest.search(/form\.add\w+Item/);
+    const block = (nextAdd === -1 ? rest : rest.slice(0, nextAdd));
+    const chain = match[0] + block;
+
+    // Znajdź zmienną (var x = form.add...)
+    const varBefore = fullScript.slice(Math.max(0, start - 60), start);
+    const varMatch = varBefore.match(/var\s+(\w+)\s*=\s*$/);
+    const varName = varMatch ? varMatch[1] : null;
+
+    const title = getChainValue(chain, 'setTitle') ||
+      (varName && getChainValue(fullScript.slice(start), 'setTitle')) || '';
+    const helpText = getChainValue(chain, 'setHelpText') ||
+      (varName ? getChainValue(fullScript, `${varName}\s*\.\s*setHelpText`) : null) || '';
+    const required = getRequired(chain) ||
+      (varName ? /\.setRequired\s*\(\s*true\s*\)/.test(fullScript.slice(start, start + 500)) : false);
+
+    if (!title && type !== 'SectionHeader') continue;
+
+    if (type === 'SectionHeader') {
+      questions.push({ type: 'section', title });
+
+    } else if (type === 'Text') {
+      questions.push({ type: 'text', title, helpText, required });
+
+    } else if (type === 'ParagraphText') {
+      questions.push({ type: 'paragraph', title, helpText, required });
+
+    } else if (type === 'Scale') {
+      const bounds = getBounds(chain);
+      const labels = getLabels(chain);
+      questions.push({ type: 'scale', title, helpText, required, bounds, labels });
+
+    } else if (type === 'MultipleChoice' || type === 'Checkbox') {
+      // Wyciągnij choices z bloku lub przez nazwę zmiennej
+      let choicesBlock = chain;
+      if (varName) {
+        // Znajdź wszystkie .createChoice wywołania dla tej zmiennej
+        const vRe = new RegExp(`${varName}\.createChoice\s*\(\s*(['"\`])(.*?)\\1\s*\)`, 'g');
+        const fullBlock = fullScript.slice(start, start + 1500);
+        choicesBlock = fullBlock;
+      }
+      const choiceRe = /createChoice\s*\(\s*(['"`])(.*?)\1\s*\)/g;
+      const choices = [];
+      let cm;
+      const searchIn = varName ? fullScript.slice(start, start + 1500) : chain;
+      while ((cm = choiceRe.exec(searchIn)) !== null) {
+        choices.push(cm[2]);
+      }
+      questions.push({
+        type: type === 'MultipleChoice' ? 'radio' : 'checkbox',
+        title, helpText, required, choices
+      });
+    }
+  }
+
+  return questions;
+}
+
 app.get('/admin/recruitments/:id/script', requireAuth, adminLimiter, (req, res) => {
   const rec = getRecruitment(req.params.id);
   if (!rec) return res.status(404).json({ error: 'Nie znaleziono' });
@@ -538,6 +643,24 @@ app.put('/admin/recruitments/:id/script', requireAuth, adminLimiter, (req, res) 
   list[idx].customScript = script;
   saveRecruitments(list);
   res.json({ success: true });
+});
+
+app.post('/admin/recruitments/:id/apply-script', requireAuth, adminLimiter, (req, res) => {
+  const list = loadRecruitments();
+  const idx = list.findIndex(r => r.id === parseInt(req.params.id));
+  if (idx === -1) return res.status(404).json({ error: 'Nie znaleziono' });
+  const script = req.body.script ? String(req.body.script).slice(0, 100000) : list[idx].customScript;
+  if (!script) return res.status(400).json({ error: 'Brak skryptu' });
+  try {
+    const questions = parseAppsScript(script);
+    if (!questions.length) return res.status(400).json({ error: 'Nie udało się sparsować pytań ze skryptu' });
+    list[idx].customScript = script;
+    list[idx].questions = questions;
+    saveRecruitments(list);
+    res.json({ success: true, count: questions.length, questions });
+  } catch(err) {
+    res.status(500).json({ error: 'Błąd parsowania: ' + err.message });
+  }
 });
 
 // ── ADMIN: KANDYDACI ──────────────────────────────────────────────

@@ -96,166 +96,7 @@
 
 <form id="form" style="display:none">
   <input type="hidden" id="recruitment-id" name="recruitmentId">
-
-  <div class="section">
-    <div class="section-title">Dane podstawowe</div>
-    <div class="two-col">
-      <div class="field"><label>Imię i nazwisko <span class="req">*</span></label><input type="text" name="imie_nazwisko" required></div>
-      <div class="field"><label>Wiek <span class="req">*</span></label><input type="number" name="wiek" min="15" max="99" required></div>
-    </div>
-    <div class="two-col">
-      <div class="field"><label>Numer telefonu <span class="req">*</span></label><input type="text" name="telefon" required></div>
-      <div class="field"><label>Adres e-mail <span class="req">*</span></label><input type="email" name="email" required></div>
-    </div>
-    <div class="field">
-      <label>Czy jesteś uczniem lub studentem? <span class="req">*</span></label>
-      <div class="radio-group">
-        <label><input type="radio" name="student" value="Tak" required> Tak</label>
-        <label><input type="radio" name="student" value="Nie"> Nie</label>
-      </div>
-    </div>
-    <div class="field" id="szkola-field" style="display:none">
-      <label>Szkoła / uczelnia i kierunek<span class="hint">Wypełnij tylko jeśli jesteś uczniem lub studentem</span></label>
-      <input type="text" name="szkola">
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Motywacja i osobowość</div>
-    <div class="field">
-      <label>Napisz kilka zdań o sobie i dlaczego zainteresowała Cię nasza oferta <span class="req">*</span><span class="hint">Nie musisz pisać formalnie – zależy nam na tym, żebyś był/a sobą</span></label>
-      <textarea name="o_sobie" required></textarea>
-    </div>
-    <div class="field">
-      <label>Co lubisz najbardziej w pracy z ludźmi? Co Cię w niej nakręca? <span class="req">*</span></label>
-      <textarea name="praca_z_ludzmi" required></textarea>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Doświadczenie</div>
-    <div class="field">
-      <label>Opisz swoje dotychczasowe doświadczenie zawodowe<span class="hint">Kawiarnia, gastronomia, handel, obsługa klienta – każde się liczy</span></label>
-      <textarea name="doswiadczenie"></textarea>
-    </div>
-    <div class="field">
-      <label>Z czym masz już doświadczenie?</label>
-      <div class="checkbox-group">
-        <label><input type="checkbox" name="umiejetnosci_lista" value="Obsługa ekspresu ciśnieniowego"> Obsługa ekspresu ciśnieniowego</label>
-        <label><input type="checkbox" name="umiejetnosci_lista" value="Kawy metodami alternatywnymi"> Kawy metodami alternatywnymi</label>
-        <label><input type="checkbox" name="umiejetnosci_lista" value="Obsługa kasy / terminala"> Obsługa kasy / terminala</label>
-        <label><input type="checkbox" name="umiejetnosci_lista" value="Praca pod presją czasu"> Praca pod presją czasu</label>
-        <label><input type="checkbox" name="umiejetnosci_lista" value="Bezpośrednia obsługa klientów"> Bezpośrednia obsługa klientów</label>
-        <label><input type="checkbox" name="umiejetnosci_lista" value="Cold brew / koktajle / matcha"> Cold brew / koktajle / matcha</label>
-        <label><input type="checkbox" name="umiejetnosci_lista" value="Kelnerowanie"> Kelnerowanie</label>
-        <label><input type="checkbox" name="umiejetnosci_lista" value="Znajomość piw kraftowych"> Znajomość piw kraftowych</label>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Dostępność i warunki</div>
-    <div class="field">
-      <label>Na jaki okres szukasz pracy? <span class="req">*</span></label>
-      <div class="radio-group">
-        <label><input type="radio" name="okres" value="Sezonowo (wakacje / kilka miesięcy)" required> Sezonowo (wakacje / kilka miesięcy)</label>
-        <label><input type="radio" name="okres" value="Minimum rok"> Minimum rok</label>
-        <label><input type="radio" name="okres" value="Dłużej"> Dłużej</label>
-        <label><input type="radio" name="okres" value="Nie wiem jeszcze"> Nie wiem jeszcze</label>
-      </div>
-    </div>
-
-    <div class="field">
-      <label>Ograniczenia dostępności<span class="hint">Np. zajęcia na uczelni, inne zobowiązania</span></label>
-      <textarea name="ograniczenia" style="min-height:60px"></textarea>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Umiejętności i dyspozycyjność</div>
-    <div class="field">
-      <div class="checkbox-group">
-        <label><input type="checkbox" name="dyspozycyjnosc" value="Dostępność w weekendy"> Dostępność w weekendy</label>
-        <label><input type="checkbox" name="dyspozycyjnosc" value="Dostępność w święta"> Dostępność w święta</label>
-        <label><input type="checkbox" name="dyspozycyjnosc" value="Umiejętność pracy z tacą"> Umiejętność pracy z tacą kelnerską</label>
-        <label><input type="checkbox" name="dyspozycyjnosc" value="Posiadam książeczkę sanepidu"> Posiadam aktualne badania sanepidu</label>
-        <label><input type="checkbox" name="dyspozycyjnosc" value="Gotowość do pracy pod presją"> Gotowość do pracy w szybkim tempie i pod presją</label>
-      </div>
-    </div>
-    <div class="field">
-      <label>Znajomość języków obcych <span class="req">*</span></label>
-      <div class="scale-group">
-        <div class="scale-row">
-          <span class="scale-lang">Angielski</span>
-          <div class="scale-options">
-            <label><input type="radio" name="angielski" value="1" required>Nie znam</label>
-            <label><input type="radio" name="angielski" value="2">Podstawowy</label>
-            <label><input type="radio" name="angielski" value="3">Komunikatywny</label>
-            <label><input type="radio" name="angielski" value="4">Biegły</label>
-          </div>
-        </div>
-        <div class="scale-row">
-          <span class="scale-lang">Niemiecki</span>
-          <div class="scale-options">
-            <label><input type="radio" name="niemiecki" value="1" required>Nie znam</label>
-            <label><input type="radio" name="niemiecki" value="2">Podstawowy</label>
-            <label><input type="radio" name="niemiecki" value="3">Komunikatywny</label>
-            <label><input type="radio" name="niemiecki" value="4">Biegły</label>
-          </div>
-        </div>
-        <div class="scale-row">
-          <span class="scale-lang">Czeski</span>
-          <div class="scale-options">
-            <label><input type="radio" name="czeski" value="1" required>Nie znam</label>
-            <label><input type="radio" name="czeski" value="2">Podstawowy</label>
-            <label><input type="radio" name="czeski" value="3">Komunikatywny</label>
-            <label><input type="radio" name="czeski" value="4">Biegły</label>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Zadania kreatywne – pokaż nam jak myślisz</div>
-    <div class="field">
-      <label>Zaproponuj jeden sezonowy letni napój – kawowy, matchowy lub soft drink <span class="req">*</span><span class="hint">Opisz nazwę, składniki, dlaczego się sprawdzi i jak byś go sprzedał/a klientowi</span></label>
-      <textarea name="napoj" required></textarea>
-    </div>
-    <div class="field">
-      <label>Masz za sobą pracowitą zmianę – i nagle klient wraca z kawą twierdząc, że jest zła. Co robisz? <span class="req">*</span><span class="hint">Nie ma złej odpowiedzi – zależy nam na tym, jak myślisz i reagujesz</span></label>
-      <textarea name="sytuacja_kawa" required></textarea>
-    </div>
-    <div class="field">
-      <label>Obsługujesz klienta, który uważa, że za długo czeka na śniadanie. Opisz jak rozwiązujesz tę sytuację. <span class="req">*</span></label>
-      <textarea name="sytuacja_sniadanie" required></textarea>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Na koniec</div>
-    <div class="field">
-      <label>Czy jest coś, o czym chcesz nas poinformować?<span class="hint">Szczególne umiejętności, termin dyspozycyjności, cokolwiek innego</span></label>
-      <textarea name="dodatkowe" style="min-height:60px"></textarea>
-    </div>
-    <div class="field">
-      <label>Skąd dowiedziałeś/aś się o naszej ofercie?</label>
-      <select name="zrodlo">
-        <option value="">– wybierz –</option>
-        <option>Instagram</option><option>Znajomy / polecenie</option>
-        <option>Ogłoszenie online</option><option>Inne</option>
-      </select>
-    </div>
-    <div class="field">
-      <div class="checkbox-group">
-        <label>
-          <input type="checkbox" name="rodo" value="tak" required>
-          Wyrażam zgodę na przetwarzanie moich danych osobowych przez cukru.cafe w celu przeprowadzenia procesu rekrutacyjnego, zgodnie z RODO. <span class="req">*</span>
-        </label>
-      </div>
-    </div>
-  </div>
-
+  <div id="dynamic-questions"></div>
   <button type="submit" class="submit-btn" id="submit-btn">Wyślij zgłoszenie</button>
 </form>
 
@@ -291,16 +132,159 @@ function renderRecruitment(rec) {
   document.getElementById('rate-after').textContent = rec.rates.after + ' zł/h';
   document.getElementById('job-info').style.display = 'block';
   document.getElementById('form').style.display = 'flex';
+  renderDynamicForm(rec.questions);
 }
 
-document.querySelectorAll('input[name="student"]').forEach(r => {
-  r.addEventListener('change', () => {
-    document.getElementById('szkola-field').style.display = r.value === 'Tak' ? 'block' : 'none';
-  });
-});
+// ── Slugify: tytuł → nazwa pola ─────────────────────────────────
+function slugField(title) {
+  return 'q_' + title.toLowerCase()
+    .replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e')
+    .replace(/ł/g,'l').replace(/ń/g,'n').replace(/ó/g,'o')
+    .replace(/ś/g,'s').replace(/ź|ż/g,'z')
+    .replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,40);
+}
 
-function collectCheckboxes(name) {
-  return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value);
+// ── Statyczne pola (zawsze obecne) ──────────────────────────────
+const STATIC_FIELDS = [
+  { type:'text',      title:'Imię i nazwisko',  name:'imie_nazwisko', required:true },
+  { type:'text',      title:'Wiek',              name:'wiek',          required:true, inputType:'number' },
+  { type:'text',      title:'Numer telefonu',    name:'telefon',       required:true },
+  { type:'text',      title:'Adres e-mail',      name:'email',         required:true, inputType:'email' },
+];
+
+// ── Render dynamiczny ────────────────────────────────────────────
+function renderDynamicForm(questions) {
+  const container = document.getElementById('dynamic-questions');
+  if (!questions || !questions.length) {
+    renderStaticFallback();
+    return;
+  }
+
+  let html = '';
+  let currentSection = null;
+  let sectionHtml = '';
+
+  function closeSection() {
+    if (currentSection !== null) {
+      html += `<div class="section"><div class="section-title">${currentSection}</div>${sectionHtml}</div>`;
+      sectionHtml = '';
+    }
+  }
+
+  // Zawsze zaczynamy od statycznych pól w pierwszej sekcji
+  const firstSection = questions.find(q => q.type === 'section');
+  currentSection = firstSection ? firstSection.title : 'Dane podstawowe';
+  sectionHtml += renderStaticFields();
+
+  for (const q of questions) {
+    if (q.type === 'section') {
+      if (q === firstSection) continue; // już użyta jako nagłówek
+      closeSection();
+      currentSection = q.title;
+      continue;
+    }
+    sectionHtml += renderField(q);
+  }
+  closeSection();
+
+  // RODO jeśli nie ma w pytaniach
+  const hasRodo = questions.some(q => q.title && q.title.toLowerCase().includes('rodo'));
+  if (!hasRodo) {
+    html += renderRodoSection();
+  }
+
+  container.innerHTML = html;
+  attachDynamicListeners();
+}
+
+function renderStaticFields() {
+  return `
+    <div class="two-col">
+      <div class="field"><label>Imię i nazwisko <span class="req">*</span></label>
+        <input type="text" name="imie_nazwisko" required></div>
+      <div class="field"><label>Wiek <span class="req">*</span></label>
+        <input type="number" name="wiek" min="15" max="99" required></div>
+    </div>`;
+}
+
+function renderField(q) {
+  const name = slugField(q.title);
+  const req = q.required ? '<span class="req">*</span>' : '';
+  const hint = q.helpText ? `<span class="hint">${q.helpText}</span>` : '';
+  const requiredAttr = q.required ? 'required' : '';
+
+  if (q.type === 'text') {
+    return `<div class="field"><label>${q.title} ${req}${hint}</label>
+      <input type="text" name="${name}" ${requiredAttr}></div>`;
+
+  } else if (q.type === 'paragraph') {
+    return `<div class="field"><label>${q.title} ${req}${hint}</label>
+      <textarea name="${name}" ${requiredAttr}></textarea></div>`;
+
+  } else if (q.type === 'radio') {
+    const choices = (q.choices || []).map(c =>
+      `<label><input type="radio" name="${name}" value="${c}" ${q.required && q.choices[0]===c ? 'required':''}>
+        ${c}</label>`).join('');
+    return `<div class="field"><label>${q.title} ${req}${hint}</label>
+      <div class="radio-group">${choices}</div></div>`;
+
+  } else if (q.type === 'checkbox') {
+    const choices = (q.choices || []).map(c =>
+      `<label><input type="checkbox" name="${name}" value="${c}"> ${c}</label>`).join('');
+    return `<div class="field"><label>${q.title}${hint}</label>
+      <div class="checkbox-group">${choices}</div></div>`;
+
+  } else if (q.type === 'scale') {
+    const { min, max } = q.bounds || { min:1, max:4 };
+    const labels = q.labels || {};
+    const opts = [];
+    for (let i = min; i <= max; i++) {
+      const lbl = i === min && labels.min ? labels.min :
+                  i === max && labels.max ? labels.max : i;
+      opts.push(`<label><input type="radio" name="${name}" value="${i}" ${q.required && i===min?'required':''}> ${lbl}</label>`);
+    }
+    return `<div class="field"><label>${q.title} ${req}${hint}</label>
+      <div class="radio-group" style="flex-direction:row;flex-wrap:wrap">${opts.join('')}</div></div>`;
+  }
+  return '';
+}
+
+function renderRodoSection() {
+  return `<div class="section"><div class="section-title">Zgoda RODO</div>
+    <div class="field"><div class="checkbox-group">
+      <label><input type="checkbox" name="rodo" value="tak" required>
+        Wyrażam zgodę na przetwarzanie moich danych osobowych przez cukru.cafe
+        w celu przeprowadzenia procesu rekrutacyjnego, zgodnie z RODO.
+        <span class="req">*</span></label>
+    </div></div></div>`;
+}
+
+function renderStaticFallback() {
+  // Stary statyczny formularz jako fallback
+  document.getElementById('dynamic-questions').innerHTML =
+    document.getElementById('static-fallback')?.innerHTML || '';
+}
+
+function attachDynamicListeners() {
+  // Brak dodatkowych listenerów potrzebnych — formularz jest w pełni dynamiczny
+}
+
+// ── Zbieranie danych ─────────────────────────────────────────────
+function collectFormData(form) {
+  const data = {};
+  const fd = new FormData(form);
+  // Zbierz pojedyncze wartości
+  for (const [k, v] of fd.entries()) {
+    if (!data[k]) data[k] = v;
+  }
+  // Zbierz checkboxy jako tablice
+  const checkboxNames = new Set(
+    Array.from(form.querySelectorAll('input[type=checkbox]')).map(el => el.name)
+  );
+  for (const name of checkboxNames) {
+    data[name] = Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value);
+  }
+  return data;
 }
 
 function showToast(msg, isError = false) {
@@ -313,11 +297,13 @@ document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = document.getElementById('submit-btn');
   btn.disabled = true; btn.textContent = 'Wysyłam...';
-  const fd = new FormData(e.target);
-  const data = Object.fromEntries(fd.entries());
-  data.umiejetnosci_lista = collectCheckboxes('umiejetnosci_lista');
-  data.preferowane_godziny = collectCheckboxes('preferowane_godziny');
-  data.dyspozycyjnosc = collectCheckboxes('dyspozycyjnosc');
+  const data = collectFormData(e.target);
+  // Zapewnij pola wymagane przez backend
+  if (!data.rodo || !data.rodo.length) {
+    showToast('Zaznacz zgodę RODO.', true);
+    btn.disabled = false; btn.textContent = 'Wyślij zgłoszenie'; return;
+  }
+  data.rodo = Array.isArray(data.rodo) ? data.rodo[0] : data.rodo;
   try {
     const r = await fetch(`/submit/${currentRecruitment.id}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
