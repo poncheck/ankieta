@@ -153,6 +153,13 @@
     .star-btn.starred { color: #f4c430; }
     .badge-star { background: #fff8e1; color: #b8860b; }
 
+    /* Meeting */
+    .meeting-input { font-size: 12px; font-family: inherit; border: 1px solid #ddd; border-radius: 6px; padding: 4px 7px; background: #fafafa; outline: none; color: #1a1a1a; width: 158px; }
+    .meeting-input:focus { border-color: #1a1a1a; background: #fff; }
+    .meeting-input.has-date { border-color: #a5c8a5; background: #f1f8f1; }
+    .ics-btn { background: transparent; border: none; cursor: pointer; font-size: 15px; padding: 0 2px; vertical-align: middle; opacity: .7; }
+    .ics-btn:hover { opacity: 1; }
+
     /* Print */
     #print-section { display: none; }
     @media print {
@@ -242,7 +249,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th style="width:40px">★</th><th>Kandydat</th><th>Rekrutacja</th><th>Kontakt</th><th>Okres</th><th>Angielski</th><th>Data</th><th></th>
+            <th style="width:40px">★</th><th>Kandydat</th><th>Rekrutacja</th><th>Kontakt</th><th>Okres</th><th>Angielski</th><th>Spotkanie</th><th>Data zgłoszenia</th><th></th>
           </tr></thead>
           <tbody id="tbody"></tbody>
         </table>
@@ -650,10 +657,61 @@ function renderCandidates() {
       <td><div>${c.email}</div><div style="font-size:12px;color:#aaa">${c.telefon}</div></td>
       <td><span class="badge">${c.okres||'—'}</span></td>
       <td><span class="badge ${eng>=3?'badge-green':''}">${poz(c.angielski)}</span></td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap">
+        <input type="datetime-local" class="meeting-input ${c.meetingAt?'has-date':''}"
+          value="${toLocalInput(c.meetingAt)}"
+          onchange="setMeeting(${c.id}, this)"
+          title="Ustaw datę spotkania">
+        ${c.meetingAt?`<button class="ics-btn" onclick="downloadICS(${c.id})" title="Pobierz do kalendarza">📅</button>`:''}
+      </td>
       <td style="font-size:12px;color:#888">${fmtDate(c.submittedAt)}</td>
       <td onclick="event.stopPropagation()"><button class="btn btn-danger" style="padding:4px 10px;font-size:12px" onclick="deleteCand(${c.id})">Usuń</button></td>
     </tr>`;
   }).join('');
+}
+
+function toLocalInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+async function setMeeting(id, input) {
+  const val = input.value;
+  const iso = val ? new Date(val).toISOString() : null;
+  const r = await fetch(`/admin/candidates/${id}/meeting`,{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({meetingAt:iso})});
+  const d = await r.json();
+  const c = allCandidates.find(x=>x.id===id);
+  if (c) c.meetingAt = d.meetingAt;
+  input.classList.toggle('has-date', !!d.meetingAt);
+  renderCandidates();
+}
+
+function downloadICS(id) {
+  const c = allCandidates.find(x=>x.id===id);
+  if (!c?.meetingAt) return;
+  const start = new Date(c.meetingAt);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  const fmt = d => d.toISOString().replace(/[-:.]/g,'').slice(0,15)+'Z';
+  const recName = recruitments.find(r=>r.id==c.recruitmentId)?.name||'Rekrutacja';
+  const ics = [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//cukru.cafe//Rekrutacja//PL','CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    `DTSTART:${fmt(start)}`,
+    `DTEND:${fmt(end)}`,
+    `SUMMARY:Rozmowa rekrutacyjna – ${c.imie_nazwisko}`,
+    `DESCRIPTION:Rekrutacja: ${recName}\\nTelefon: ${c.telefon}\\nEmail: ${c.email}`,
+    `UID:rekrutacja-${c.id}@cukru.cafe`,
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+  const blob = new Blob([ics], {type:'text/calendar'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `spotkanie-${c.imie_nazwisko.replace(/\s+/g,'-')}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 async function toggleStar(id) {
@@ -772,6 +830,11 @@ function openCandModal(id) {
       <div class="mq">Klient – długie czekanie</div><div class="mans">${c.sytuacja_sniadanie}</div>
     </div>
     ${c.dodatkowe?`<div class="msec"><div class="msec-title">Dodatkowe</div><div class="mans">${c.dodatkowe}</div></div>`:''}
+    ${c.meetingAt?`<div class="msec" style="background:#f1f8f1;border-radius:8px;padding:10px 14px;border:1px solid #c8e6c9">
+      <div class="msec-title" style="color:#2e7d32">Spotkanie rekrutacyjne</div>
+      <div class="mrow"><span class="mlbl">Data i godzina</span><span class="mval" style="color:#2e7d32;font-size:15px">${fmtDate(c.meetingAt)}</span></div>
+      <button class="btn btn-green" style="margin-top:8px;font-size:12px" onclick="downloadICS(${c.id})">📅 Pobierz do kalendarza</button>
+    </div>`:''}
     <div class="msec"><div class="mrow"><span class="mlbl">Źródło</span><span class="mval">${c.zrodlo||'—'}</span></div></div>`;
   document.getElementById('cand-overlay').classList.add('open');
 }

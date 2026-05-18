@@ -562,6 +562,25 @@ app.delete('/admin/candidates/:id', requireAuth, adminLimiter, (req, res) => {
   res.json({ success: true });
 });
 
+app.put('/admin/candidates/:id/meeting', requireAuth, adminLimiter, (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: 'Nieprawidłowe ID' });
+  const meetingAt = req.body.meetingAt ? String(req.body.meetingAt).slice(0, 30) : null;
+  if (meetingAt && isNaN(Date.parse(meetingAt))) return res.status(400).json({ error: 'Nieprawidłowa data' });
+  let found = false;
+  loadRecruitments().forEach(r => {
+    const list = loadCandidates(r.id);
+    const idx = list.findIndex(c => c.id === id);
+    if (idx !== -1) {
+      list[idx].meetingAt = meetingAt;
+      found = true;
+      fs.writeFileSync(candFile(r.id), JSON.stringify(list, null, 2));
+    }
+  });
+  if (!found) return res.status(404).json({ error: 'Nie znaleziono' });
+  res.json({ meetingAt });
+});
+
 app.put('/admin/candidates/:id/star', requireAuth, adminLimiter, (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: 'Nieprawidłowe ID' });
