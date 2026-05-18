@@ -146,6 +146,34 @@
     .script-actions { padding: 10px 14px; border-top: 1px solid rgba(255,255,255,.1); display: flex; justify-content: flex-end; }
     .copy-code-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: inherit; }
     .copy-code-btn:hover { background: rgba(255,255,255,.2); }
+
+    /* Star */
+    .star-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 0 4px; line-height: 1; color: #ddd; transition: color .1s; }
+    .star-btn:hover { color: #f4c430; }
+    .star-btn.starred { color: #f4c430; }
+    .badge-star { background: #fff8e1; color: #b8860b; }
+
+    /* Print */
+    #print-section { display: none; }
+    @media print {
+      body > *:not(#print-section) { display: none !important; }
+      #print-section { display: block !important; font-family: Arial, sans-serif; color: #1a1a1a; }
+      .pc { page-break-after: always; padding: 24px; max-width: 760px; margin: 0 auto; }
+      .pc:last-child { page-break-after: avoid; }
+      .pc-hdr { background: #1a1a1a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #f2ede8; padding: 18px 22px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 14px; margin-bottom: 0; }
+      .pc-hdr-name { font-size: 18px; font-weight: 700; color: #f2ede8; margin: 0; }
+      .pc-hdr-sub { font-size: 12px; color: rgba(242,237,232,0.6); margin: 3px 0 0; }
+      .pc-body { border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; padding: 18px 22px; }
+      .pc-sec { margin-bottom: 14px; border-top: 1px solid #eee; padding-top: 10px; }
+      .pc-sec:first-child { border-top: none; padding-top: 0; }
+      .pc-sec-title { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: #aaa; font-weight: 700; margin: 0 0 6px; }
+      .pc-row { display: flex; gap: 8px; margin-bottom: 4px; font-size: 13px; }
+      .pc-lbl { color: #888; min-width: 160px; }
+      .pc-val { font-weight: 600; }
+      .pc-ans { background: #f7f4f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; border-left: 3px solid #1a1a1a; padding: 8px 12px; margin-bottom: 6px; font-size: 12px; line-height: 1.6; border-radius: 0 4px 4px 0; }
+      .pc-q { font-size: 10px; color: #aaa; margin-bottom: 3px; }
+      .pc-badge { display: inline-block; background: #f0ede9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; border-radius: 3px; padding: 1px 7px; font-size: 11px; margin: 2px; color: #555; }
+    }
   </style>
 </head>
 <body>
@@ -203,11 +231,18 @@
         <select id="filter-rec" onchange="renderCandidates()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;outline:none">
           <option value="">Wszystkie rekrutacje</option>
         </select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;white-space:nowrap">
+          <input type="checkbox" id="filter-starred" onchange="renderCandidates()" style="accent-color:#f4c430;width:15px;height:15px">
+          Tylko ★
+        </label>
+        <button class="btn btn-dark" id="print-btn" onclick="printStarred()" style="display:none;white-space:nowrap">
+          &#x1F5A8; Drukuj zaznaczone (<span id="print-count">0</span>)
+        </button>
       </div>
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Kandydat</th><th>Rekrutacja</th><th>Kontakt</th><th>Okres</th><th>Angielski</th><th>Data</th><th></th>
+            <th style="width:40px">★</th><th>Kandydat</th><th>Rekrutacja</th><th>Kontakt</th><th>Okres</th><th>Angielski</th><th>Data</th><th></th>
           </tr></thead>
           <tbody id="tbody"></tbody>
         </table>
@@ -267,6 +302,9 @@
     </div>
   </div>
 </div>
+
+<!-- SEKCJA DRUKU -->
+<div id="print-section"></div>
 
 <!-- DRAWER edytor rekrutacji -->
 <div class="drawer" id="editor-drawer">
@@ -569,19 +607,30 @@ async function loadCandidates() {
 function renderStats() {
   const today = allCandidates.filter(c=>isToday(c.submittedAt)).length;
   const eng = allCandidates.filter(c=>parseInt(c.angielski)>=3).length;
+  const starred = allCandidates.filter(c=>c.starred).length;
   const exp = allCandidates.filter(c=>lst(c.umiejetnosci_lista).includes('ekspres')).length;
   document.getElementById('stats-row').innerHTML = `
     <div class="stat"><div class="stat-num">${allCandidates.length}</div><div class="stat-lbl">Wszystkich zgłoszeń</div></div>
     <div class="stat"><div class="stat-num">${today}</div><div class="stat-lbl">Dzisiaj</div></div>
-    <div class="stat"><div class="stat-num">${eng}</div><div class="stat-lbl">Angielski kom.+</div></div>
-    <div class="stat"><div class="stat-num">${exp}</div><div class="stat-lbl">Doświadczenie z ekspresem</div></div>`;
+    <div class="stat"><div class="stat-num" style="color:#b8860b">★ ${starred}</div><div class="stat-lbl">Zaznaczonych</div></div>
+    <div class="stat"><div class="stat-num">${eng}</div><div class="stat-lbl">Angielski kom.+</div></div>`;
+  updatePrintBtn();
+}
+
+function updatePrintBtn() {
+  const n = allCandidates.filter(c=>c.starred).length;
+  const btn = document.getElementById('print-btn');
+  btn.style.display = n > 0 ? 'inline-flex' : 'none';
+  document.getElementById('print-count').textContent = n;
 }
 
 function renderCandidates() {
   const q = document.getElementById('search').value.toLowerCase();
   const recFilter = document.getElementById('filter-rec').value;
+  const onlyStarred = document.getElementById('filter-starred').checked;
   const filtered = allCandidates.filter(c =>
     (!recFilter || c.recruitmentId == recFilter) &&
+    (!onlyStarred || c.starred) &&
     (!q || c.imie_nazwisko?.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q))
   );
   const tbody = document.getElementById('tbody');
@@ -590,6 +639,9 @@ function renderCandidates() {
   tbody.innerHTML = filtered.map(c => {
     const eng = parseInt(c.angielski)||0;
     return `<tr class="clickable" onclick="openCandModal(${c.id})">
+      <td onclick="event.stopPropagation()">
+        <button class="star-btn ${c.starred?'starred':''}" onclick="toggleStar(${c.id})" title="${c.starred?'Usuń gwiazdkę':'Dodaj gwiazdkę'}">${c.starred?'★':'☆'}</button>
+      </td>
       <td><div class="name-cell"><div class="avatar">${initials(c.imie_nazwisko||'?')}</div><div>
         <div class="name-main">${c.imie_nazwisko}</div>
         <div class="name-sub">${c.wiek} lat &middot; ${c.student==='Tak'?'student':'—'}</div>
@@ -602,6 +654,82 @@ function renderCandidates() {
       <td onclick="event.stopPropagation()"><button class="btn btn-danger" style="padding:4px 10px;font-size:12px" onclick="deleteCand(${c.id})">Usuń</button></td>
     </tr>`;
   }).join('');
+}
+
+async function toggleStar(id) {
+  const r = await fetch(`/admin/candidates/${id}/star`,{method:'PUT',credentials:'same-origin'});
+  const d = await r.json();
+  const c = allCandidates.find(x=>x.id===id);
+  if (c) c.starred = d.starred;
+  renderStats();
+  renderCandidates();
+}
+
+function buildCandidatePrint(c) {
+  const recName = recruitments.find(r=>r.id==c.recruitmentId)?.name||'—';
+  const poz = v => ({'1':'Nie znam','2':'Podstawowy','3':'Komunikatywny','4':'Biegły'}[v]||v);
+  const lst = v => !v?'—':Array.isArray(v)?v.join(', '):v;
+  const u = lst(c.umiejetnosci_lista), d = lst(c.dyspozycyjnosc);
+  const badges = arr => Array.isArray(arr) && arr.length
+    ? arr.map(x=>`<span class="pc-badge">${x}</span>`).join('')
+    : '—';
+  return `<div class="pc">
+    <div class="pc-hdr">
+      <div>
+        <div class="pc-hdr-name">★ ${c.imie_nazwisko}</div>
+        <div class="pc-hdr-sub">${recName} &middot; ${fmtDate(c.submittedAt)}</div>
+      </div>
+    </div>
+    <div class="pc-body">
+      <div class="pc-sec">
+        <div class="pc-sec-title">Dane kontaktowe</div>
+        <div class="pc-row"><span class="pc-lbl">Telefon</span><span class="pc-val">${c.telefon}</span></div>
+        <div class="pc-row"><span class="pc-lbl">E-mail</span><span class="pc-val">${c.email}</span></div>
+        <div class="pc-row"><span class="pc-lbl">Wiek</span><span class="pc-val">${c.wiek} lat</span></div>
+        <div class="pc-row"><span class="pc-lbl">Student</span><span class="pc-val">${c.student}</span></div>
+        ${c.szkola?`<div class="pc-row"><span class="pc-lbl">Szkoła</span><span class="pc-val">${c.szkola}</span></div>`:''}
+      </div>
+      <div class="pc-sec">
+        <div class="pc-sec-title">Motywacja</div>
+        <div class="pc-q">O sobie</div><div class="pc-ans">${c.o_sobie}</div>
+        <div class="pc-q">Praca z ludźmi</div><div class="pc-ans">${c.praca_z_ludzmi}</div>
+      </div>
+      <div class="pc-sec">
+        <div class="pc-sec-title">Doświadczenie</div>
+        <div class="pc-ans">${c.doswiadczenie||'—'}</div>
+        <div>${badges(c.umiejetnosci_lista)}</div>
+      </div>
+      <div class="pc-sec">
+        <div class="pc-sec-title">Dostępność</div>
+        <div class="pc-row"><span class="pc-lbl">Okres</span><span class="pc-val">${c.okres}</span></div>
+        ${c.ograniczenia?`<div class="pc-ans">${c.ograniczenia}</div>`:''}
+        <div style="margin-top:6px">${badges(c.dyspozycyjnosc)}</div>
+      </div>
+      <div class="pc-sec">
+        <div class="pc-sec-title">Języki</div>
+        <div class="pc-row"><span class="pc-lbl">Angielski</span><span class="pc-val">${poz(c.angielski)}</span></div>
+        <div class="pc-row"><span class="pc-lbl">Niemiecki</span><span class="pc-val">${poz(c.niemiecki)}</span></div>
+        <div class="pc-row"><span class="pc-lbl">Czeski</span><span class="pc-val">${poz(c.czeski)}</span></div>
+      </div>
+      <div class="pc-sec">
+        <div class="pc-sec-title">Zadania kreatywne</div>
+        <div class="pc-q">Propozycja napoju</div><div class="pc-ans">${c.napoj}</div>
+        <div class="pc-q">Klient – zła kawa</div><div class="pc-ans">${c.sytuacja_kawa}</div>
+        <div class="pc-q">Klient – długie czekanie</div><div class="pc-ans">${c.sytuacja_sniadanie}</div>
+      </div>
+      ${c.dodatkowe?`<div class="pc-sec"><div class="pc-sec-title">Dodatkowe</div><div class="pc-ans">${c.dodatkowe}</div></div>`:''}
+      <div class="pc-sec">
+        <div class="pc-row"><span class="pc-lbl">Źródło</span><span class="pc-val">${c.zrodlo||'—'}</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function printStarred() {
+  const starred = allCandidates.filter(c=>c.starred);
+  if (!starred.length) return;
+  document.getElementById('print-section').innerHTML = starred.map(buildCandidatePrint).join('');
+  window.print();
 }
 
 function openCandModal(id) {

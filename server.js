@@ -562,6 +562,25 @@ app.delete('/admin/candidates/:id', requireAuth, adminLimiter, (req, res) => {
   res.json({ success: true });
 });
 
+app.put('/admin/candidates/:id/star', requireAuth, adminLimiter, (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: 'Nieprawidłowe ID' });
+  let newState = false;
+  let found = false;
+  loadRecruitments().forEach(r => {
+    const list = loadCandidates(r.id);
+    const idx = list.findIndex(c => c.id === id);
+    if (idx !== -1) {
+      list[idx].starred = !list[idx].starred;
+      newState = list[idx].starred;
+      found = true;
+      fs.writeFileSync(candFile(r.id), JSON.stringify(list, null, 2));
+    }
+  });
+  if (!found) return res.status(404).json({ error: 'Nie znaleziono' });
+  res.json({ starred: newState });
+});
+
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
 // ── 404 ───────────────────────────────────────────────────────────
