@@ -382,6 +382,10 @@ const lst = v => !v?'—':Array.isArray(v)?v.join(', '):v;
 const initials = n => n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
 const fmtDate = iso => new Date(iso).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const isToday = iso => new Date(iso).toDateString() === new Date().toDateString();
+// Każda wartość od kandydata lub z edytora rekrutacji MUSI przejść przez esc() przed wstawieniem do innerHTML
+const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+// Tekst do pliku .ics (RFC 5545): ucieczka znaków specjalnych i nowych linii
+const icsEsc = v => String(v ?? '').replace(/\\/g,'\\\\').replace(/[;,]/g,'\\$&').replace(/\r?\n/g,'\\n');
 
 // ── Auth ──────────────────────────────────────────────────────────
 async function doLogin() {
@@ -414,7 +418,7 @@ async function loadRecruitments() {
   // populate filter
   const sel = document.getElementById('filter-rec');
   sel.innerHTML = '<option value="">Wszystkie rekrutacje</option>' +
-    recruitments.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
+    recruitments.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');
 }
 
 function renderRecruitments() {
@@ -424,14 +428,14 @@ function renderRecruitments() {
     <div class="rec-card ${rec.isDefault?'is-default':''}">
       <div class="rec-card-hdr">
         <div>
-          <div class="rec-card-title">${rec.name}</div>
-          <div class="rec-card-sub">${rec.jobTitle} &middot; ${rec.workType}</div>
+          <div class="rec-card-title">${esc(rec.name)}</div>
+          <div class="rec-card-sub">${esc(rec.jobTitle)} &middot; ${esc(rec.workType)}</div>
         </div>
       </div>
       <div class="rec-card-meta">
         ${rec.isDefault?'<span class="badge badge-default">Domyślna</span>':''}
         ${rec.active?'<span class="badge badge-green">Aktywna</span>':'<span class="badge">Nieaktywna</span>'}
-        <span class="badge">/r/${rec.slug}</span>
+        <span class="badge">/r/${esc(rec.slug)}</span>
         ${rec.customScript?'<span class="badge badge-blue">Własny skrypt</span>':''}
       </div>
       <div class="rec-card-stats">
@@ -442,7 +446,7 @@ function renderRecruitments() {
         <button class="btn" onclick="openEditor(${rec.id})">Edytuj</button>
         <button class="btn btn-green" onclick="showScript(${rec.id})">Apps Script</button>
         ${!rec.isDefault?`<button class="btn" onclick="setDefault(${rec.id})">Ustaw domyślną</button>`:''}
-        <button class="btn" onclick="window.open('/r/${rec.slug}','_blank')">Podgląd</button>
+        <button class="btn" onclick="window.open('/r/${esc(encodeURIComponent(rec.slug))}','_blank')">Podgląd</button>
         ${!rec.isDefault?`<button class="btn btn-danger" onclick="deleteRecruitment(${rec.id})">Usuń</button>`:''}
       </div>
     </div>`).join('');
@@ -496,7 +500,7 @@ document.getElementById('ed-slug').addEventListener('input', e => {
 function renderDuties() {
   document.getElementById('duties-editor').innerHTML = editingDuties.map((d,i) => `
     <li>
-      <input type="text" value="${d}" onchange="editingDuties[${i}]=this.value">
+      <input type="text" value="${esc(d)}" onchange="editingDuties[${i}]=this.value">
       <button onclick="editingDuties.splice(${i},1);renderDuties()">&#x2715;</button>
     </li>`).join('');
 }
@@ -649,14 +653,14 @@ function renderCandidates() {
       <td onclick="event.stopPropagation()">
         <button class="star-btn ${c.starred?'starred':''}" onclick="toggleStar(${c.id})" title="${c.starred?'Usuń gwiazdkę':'Dodaj gwiazdkę'}">${c.starred?'★':'☆'}</button>
       </td>
-      <td><div class="name-cell"><div class="avatar">${initials(c.imie_nazwisko||'?')}</div><div>
-        <div class="name-main">${c.imie_nazwisko}${c.cv?` <a href="/admin/candidates/${c.id}/cv" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Otwórz CV" style="text-decoration:none">📎</a>`:''}</div>
-        <div class="name-sub">${c.wiek} lat &middot; ${c.student==='Tak'?'student':'—'}</div>
+      <td><div class="name-cell"><div class="avatar">${esc(initials(c.imie_nazwisko||'?'))}</div><div>
+        <div class="name-main">${esc(c.imie_nazwisko)}${c.cv?` <a href="/admin/candidates/${c.id}/cv" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Otwórz CV" style="text-decoration:none">📎</a>`:''}</div>
+        <div class="name-sub">${esc(c.wiek)} lat &middot; ${c.student==='Tak'?'student':'—'}</div>
       </div></div></td>
-      <td><span class="badge">${recName(c.recruitmentId)}</span></td>
-      <td><div>${c.email}</div><div style="font-size:12px;color:#aaa">${c.telefon}</div></td>
-      <td><span class="badge">${c.okres||'—'}</span></td>
-      <td><span class="badge ${eng>=3?'badge-green':''}">${poz(c.angielski)}</span></td>
+      <td><span class="badge">${esc(recName(c.recruitmentId))}</span></td>
+      <td><div>${esc(c.email)}</div><div style="font-size:12px;color:#aaa">${esc(c.telefon)}</div></td>
+      <td><span class="badge">${esc(c.okres||'—')}</span></td>
+      <td><span class="badge ${eng>=3?'badge-green':''}">${esc(poz(c.angielski))}</span></td>
       <td onclick="event.stopPropagation()" style="white-space:nowrap">
         <input type="datetime-local" class="meeting-input ${c.meetingAt?'has-date':''}"
           value="${toLocalInput(c.meetingAt)}"
@@ -700,8 +704,8 @@ function downloadICS(id) {
     'BEGIN:VEVENT',
     `DTSTART:${fmt(start)}`,
     `DTEND:${fmt(end)}`,
-    `SUMMARY:Rozmowa rekrutacyjna – ${c.imie_nazwisko}`,
-    `DESCRIPTION:Rekrutacja: ${recName}\\nTelefon: ${c.telefon}\\nEmail: ${c.email}`,
+    `SUMMARY:Rozmowa rekrutacyjna – ${icsEsc(c.imie_nazwisko)}`,
+    `DESCRIPTION:Rekrutacja: ${icsEsc(recName)}\\nTelefon: ${icsEsc(c.telefon)}\\nEmail: ${icsEsc(c.email)}`,
     `UID:rekrutacja-${c.id}@cukru.cafe`,
     'END:VEVENT','END:VCALENDAR'
   ].join('\r\n');
@@ -709,7 +713,7 @@ function downloadICS(id) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `spotkanie-${c.imie_nazwisko.replace(/\s+/g,'-')}.ics`;
+  a.download = `spotkanie-${String(c.imie_nazwisko).replace(/[^\p{L}\p{N}]+/gu,'-')}.ics`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -729,55 +733,55 @@ function buildCandidatePrint(c) {
   const lst = v => !v?'—':Array.isArray(v)?v.join(', '):v;
   const u = lst(c.umiejetnosci_lista), d = lst(c.dyspozycyjnosc);
   const badges = arr => Array.isArray(arr) && arr.length
-    ? arr.map(x=>`<span class="pc-badge">${x}</span>`).join('')
+    ? arr.map(x=>`<span class="pc-badge">${esc(x)}</span>`).join('')
     : '—';
   return `<div class="pc">
     <div class="pc-hdr">
       <div>
-        <div class="pc-hdr-name">★ ${c.imie_nazwisko}</div>
-        <div class="pc-hdr-sub">${recName} &middot; ${fmtDate(c.submittedAt)}</div>
+        <div class="pc-hdr-name">★ ${esc(c.imie_nazwisko)}</div>
+        <div class="pc-hdr-sub">${esc(recName)} &middot; ${fmtDate(c.submittedAt)}</div>
       </div>
     </div>
     <div class="pc-body">
       <div class="pc-sec">
         <div class="pc-sec-title">Dane kontaktowe</div>
-        <div class="pc-row"><span class="pc-lbl">Telefon</span><span class="pc-val">${c.telefon}</span></div>
-        <div class="pc-row"><span class="pc-lbl">E-mail</span><span class="pc-val">${c.email}</span></div>
-        <div class="pc-row"><span class="pc-lbl">Wiek</span><span class="pc-val">${c.wiek} lat</span></div>
-        <div class="pc-row"><span class="pc-lbl">Student</span><span class="pc-val">${c.student}</span></div>
-        ${c.szkola?`<div class="pc-row"><span class="pc-lbl">Szkoła</span><span class="pc-val">${c.szkola}</span></div>`:''}
+        <div class="pc-row"><span class="pc-lbl">Telefon</span><span class="pc-val">${esc(c.telefon)}</span></div>
+        <div class="pc-row"><span class="pc-lbl">E-mail</span><span class="pc-val">${esc(c.email)}</span></div>
+        <div class="pc-row"><span class="pc-lbl">Wiek</span><span class="pc-val">${esc(c.wiek)} lat</span></div>
+        <div class="pc-row"><span class="pc-lbl">Student</span><span class="pc-val">${esc(c.student)}</span></div>
+        ${c.szkola?`<div class="pc-row"><span class="pc-lbl">Szkoła</span><span class="pc-val">${esc(c.szkola)}</span></div>`:''}
       </div>
       <div class="pc-sec">
         <div class="pc-sec-title">Motywacja</div>
-        <div class="pc-q">O sobie</div><div class="pc-ans">${c.o_sobie}</div>
-        <div class="pc-q">Praca z ludźmi</div><div class="pc-ans">${c.praca_z_ludzmi}</div>
+        <div class="pc-q">O sobie</div><div class="pc-ans">${esc(c.o_sobie)}</div>
+        <div class="pc-q">Praca z ludźmi</div><div class="pc-ans">${esc(c.praca_z_ludzmi)}</div>
       </div>
       <div class="pc-sec">
         <div class="pc-sec-title">Doświadczenie</div>
-        <div class="pc-ans">${c.doswiadczenie||'—'}</div>
+        <div class="pc-ans">${esc(c.doswiadczenie||'—')}</div>
         <div>${badges(c.umiejetnosci_lista)}</div>
       </div>
       <div class="pc-sec">
         <div class="pc-sec-title">Dostępność</div>
-        <div class="pc-row"><span class="pc-lbl">Okres</span><span class="pc-val">${c.okres}</span></div>
-        ${c.ograniczenia?`<div class="pc-ans">${c.ograniczenia}</div>`:''}
+        <div class="pc-row"><span class="pc-lbl">Okres</span><span class="pc-val">${esc(c.okres)}</span></div>
+        ${c.ograniczenia?`<div class="pc-ans">${esc(c.ograniczenia)}</div>`:''}
         <div style="margin-top:6px">${badges(c.dyspozycyjnosc)}</div>
       </div>
       <div class="pc-sec">
         <div class="pc-sec-title">Języki</div>
-        <div class="pc-row"><span class="pc-lbl">Angielski</span><span class="pc-val">${poz(c.angielski)}</span></div>
-        <div class="pc-row"><span class="pc-lbl">Niemiecki</span><span class="pc-val">${poz(c.niemiecki)}</span></div>
-        <div class="pc-row"><span class="pc-lbl">Czeski</span><span class="pc-val">${poz(c.czeski)}</span></div>
+        <div class="pc-row"><span class="pc-lbl">Angielski</span><span class="pc-val">${esc(poz(c.angielski))}</span></div>
+        <div class="pc-row"><span class="pc-lbl">Niemiecki</span><span class="pc-val">${esc(poz(c.niemiecki))}</span></div>
+        <div class="pc-row"><span class="pc-lbl">Czeski</span><span class="pc-val">${esc(poz(c.czeski))}</span></div>
       </div>
       <div class="pc-sec">
         <div class="pc-sec-title">Zadania kreatywne</div>
-        <div class="pc-q">Propozycja napoju</div><div class="pc-ans">${c.napoj}</div>
-        <div class="pc-q">Klient – zła kawa</div><div class="pc-ans">${c.sytuacja_kawa}</div>
-        <div class="pc-q">Klient – długie czekanie</div><div class="pc-ans">${c.sytuacja_sniadanie}</div>
+        <div class="pc-q">Propozycja napoju</div><div class="pc-ans">${esc(c.napoj)}</div>
+        <div class="pc-q">Klient – zła kawa</div><div class="pc-ans">${esc(c.sytuacja_kawa)}</div>
+        <div class="pc-q">Klient – długie czekanie</div><div class="pc-ans">${esc(c.sytuacja_sniadanie)}</div>
       </div>
-      ${c.dodatkowe?`<div class="pc-sec"><div class="pc-sec-title">Dodatkowe</div><div class="pc-ans">${c.dodatkowe}</div></div>`:''}
+      ${c.dodatkowe?`<div class="pc-sec"><div class="pc-sec-title">Dodatkowe</div><div class="pc-ans">${esc(c.dodatkowe)}</div></div>`:''}
       <div class="pc-sec">
-        <div class="pc-row"><span class="pc-lbl">Źródło</span><span class="pc-val">${c.zrodlo||'—'}</span></div>
+        <div class="pc-row"><span class="pc-lbl">Źródło</span><span class="pc-val">${esc(c.zrodlo||'—')}</span></div>
       </div>
     </div>
   </div>`;
@@ -798,45 +802,45 @@ function openCandModal(id) {
   const u=lst(c.umiejetnosci_lista), d=lst(c.dyspozycyjnosc);
   document.getElementById('cm-body').innerHTML = `
     <div class="msec"><div class="msec-title">Dane kontaktowe</div>
-      <div class="mrow"><span class="mlbl">Telefon</span><span class="mval">${c.telefon}</span></div>
-      <div class="mrow"><span class="mlbl">E-mail</span><span class="mval">${c.email}</span></div>
-      <div class="mrow"><span class="mlbl">Wiek</span><span class="mval">${c.wiek} lat</span></div>
-      <div class="mrow"><span class="mlbl">Student</span><span class="mval">${c.student}</span></div>
-      ${c.szkola?`<div class="mrow"><span class="mlbl">Szkoła</span><span class="mval">${c.szkola}</span></div>`:''}
+      <div class="mrow"><span class="mlbl">Telefon</span><span class="mval">${esc(c.telefon)}</span></div>
+      <div class="mrow"><span class="mlbl">E-mail</span><span class="mval">${esc(c.email)}</span></div>
+      <div class="mrow"><span class="mlbl">Wiek</span><span class="mval">${esc(c.wiek)} lat</span></div>
+      <div class="mrow"><span class="mlbl">Student</span><span class="mval">${esc(c.student)}</span></div>
+      ${c.szkola?`<div class="mrow"><span class="mlbl">Szkoła</span><span class="mval">${esc(c.szkola)}</span></div>`:''}
       ${c.cv?`<div class="mrow"><span class="mlbl">CV</span><span class="mval"><a href="/admin/candidates/${c.id}/cv" target="_blank" rel="noopener">📎 Otwórz</a> &middot; <a href="/admin/candidates/${c.id}/cv?download=1">Pobierz</a> <span style="color:#aaa;font-size:12px">(${Math.max(1, Math.round((c.cv.size||0)/1024))} KB)</span></span></div>`:''}
     </div>
     <div class="msec"><div class="msec-title">Motywacja</div>
-      <div class="mq">O sobie</div><div class="mans">${c.o_sobie}</div>
-      <div class="mq">Praca z ludźmi</div><div class="mans">${c.praca_z_ludzmi}</div>
+      <div class="mq">O sobie</div><div class="mans">${esc(c.o_sobie)}</div>
+      <div class="mq">Praca z ludźmi</div><div class="mans">${esc(c.praca_z_ludzmi)}</div>
     </div>
     <div class="msec"><div class="msec-title">Doświadczenie</div>
-      <div class="mans">${c.doswiadczenie||'—'}</div>
-      <div>${u!=='—'?u.split(',').map(x=>`<span class="mbadge">${x.trim()}</span>`).join(''):'—'}</div>
+      <div class="mans">${esc(c.doswiadczenie||'—')}</div>
+      <div>${u!=='—'?u.split(',').map(x=>`<span class="mbadge">${esc(x.trim())}</span>`).join(''):'—'}</div>
     </div>
     <div class="msec"><div class="msec-title">Dostępność</div>
-      <div class="mrow"><span class="mlbl">Okres</span><span class="mval">${c.okres}</span></div>
-      <div class="mrow"><span class="mlbl">Godziny/tydz.</span><span class="mval">${c.godziny}</span></div>
-      <div class="mrow"><span class="mlbl">Pref. godziny</span><span class="mval">${lst(c.preferowane_godziny)}</span></div>
-      ${c.ograniczenia?`<div class="mans">${c.ograniczenia}</div>`:''}
-      <div style="margin-top:8px">${d!=='—'?d.split(',').map(x=>`<span class="mbadge">${x.trim()}</span>`).join(''):'—'}</div>
+      <div class="mrow"><span class="mlbl">Okres</span><span class="mval">${esc(c.okres)}</span></div>
+      ${c.godziny?`<div class="mrow"><span class="mlbl">Godziny/tydz.</span><span class="mval">${esc(c.godziny)}</span></div>`:''}
+      <div class="mrow"><span class="mlbl">Pref. godziny</span><span class="mval">${esc(lst(c.preferowane_godziny))}</span></div>
+      ${c.ograniczenia?`<div class="mans">${esc(c.ograniczenia)}</div>`:''}
+      <div style="margin-top:8px">${d!=='—'?d.split(',').map(x=>`<span class="mbadge">${esc(x.trim())}</span>`).join(''):'—'}</div>
     </div>
     <div class="msec"><div class="msec-title">Języki</div>
-      <div class="mrow"><span class="mlbl">Angielski</span><span class="mval">${poz(c.angielski)}</span></div>
-      <div class="mrow"><span class="mlbl">Niemiecki</span><span class="mval">${poz(c.niemiecki)}</span></div>
-      <div class="mrow"><span class="mlbl">Czeski</span><span class="mval">${poz(c.czeski)}</span></div>
+      <div class="mrow"><span class="mlbl">Angielski</span><span class="mval">${esc(poz(c.angielski))}</span></div>
+      <div class="mrow"><span class="mlbl">Niemiecki</span><span class="mval">${esc(poz(c.niemiecki))}</span></div>
+      <div class="mrow"><span class="mlbl">Czeski</span><span class="mval">${esc(poz(c.czeski))}</span></div>
     </div>
     <div class="msec"><div class="msec-title">Zadania kreatywne</div>
-      <div class="mq">Propozycja napoju</div><div class="mans">${c.napoj}</div>
-      <div class="mq">Klient – zła kawa</div><div class="mans">${c.sytuacja_kawa}</div>
-      <div class="mq">Klient – długie czekanie</div><div class="mans">${c.sytuacja_sniadanie}</div>
+      <div class="mq">Propozycja napoju</div><div class="mans">${esc(c.napoj)}</div>
+      <div class="mq">Klient – zła kawa</div><div class="mans">${esc(c.sytuacja_kawa)}</div>
+      <div class="mq">Klient – długie czekanie</div><div class="mans">${esc(c.sytuacja_sniadanie)}</div>
     </div>
-    ${c.dodatkowe?`<div class="msec"><div class="msec-title">Dodatkowe</div><div class="mans">${c.dodatkowe}</div></div>`:''}
+    ${c.dodatkowe?`<div class="msec"><div class="msec-title">Dodatkowe</div><div class="mans">${esc(c.dodatkowe)}</div></div>`:''}
     ${c.meetingAt?`<div class="msec" style="background:#f1f8f1;border-radius:8px;padding:10px 14px;border:1px solid #c8e6c9">
       <div class="msec-title" style="color:#2e7d32">Spotkanie rekrutacyjne</div>
       <div class="mrow"><span class="mlbl">Data i godzina</span><span class="mval" style="color:#2e7d32;font-size:15px">${fmtDate(c.meetingAt)}</span></div>
       <button class="btn btn-green" style="margin-top:8px;font-size:12px" onclick="downloadICS(${c.id})">📅 Pobierz do kalendarza</button>
     </div>`:''}
-    <div class="msec"><div class="mrow"><span class="mlbl">Źródło</span><span class="mval">${c.zrodlo||'—'}</span></div></div>`;
+    <div class="msec"><div class="mrow"><span class="mlbl">Źródło</span><span class="mval">${esc(c.zrodlo||'—')}</span></div></div>`;
   document.getElementById('cand-overlay').classList.add('open');
 }
 function closeCandModal() { document.getElementById('cand-overlay').classList.remove('open'); }
