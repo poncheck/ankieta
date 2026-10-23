@@ -5,6 +5,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +16,51 @@ const DATA = path.join(__dirname, 'data');
 app.set('trust proxy', 1);
 
 if (!fs.existsSync(DATA)) fs.mkdirSync(DATA);
+
+// ── UPLOAD CV ─────────────────────────────────────────────────────
+// Pliki leżą w data/cv (poza katalogiem public, więc nie da się ich
+// otworzyć z zewnątrz) i są wydawane tylko zalogowanemu adminowi.
+const CV_DIR = path.join(DATA, 'cv');
+if (!fs.existsSync(CV_DIR)) fs.mkdirSync(CV_DIR, { recursive: true });
+const CV_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+
+const cvUploader = multer({
+  storage: multer.diskStorage({
+    destination: CV_DIR,
+    // Losowa nazwa na dysku — nazwa od kandydata nigdy nie trafia do systemu plików
+    filename: (req, file, cb) => cb(null, crypto.randomBytes(16).toString('hex') + '.upload'),
+  }),
+  limits: { fileSize: CV_MAX_BYTES, files: 1, fields: 60, fieldSize: 256 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ok = ['application/pdf', 'image/jpeg'].includes(file.mimetype);
+    cb(ok ? null : new Error('CV_INVALID_TYPE'), ok);
+  },
+});
+
+// Wykrywa PRAWDZIWY typ pliku po pierwszych bajtach (mimetype od klienta można podrobić)
+function detectCvType(filePath) {
+  const buf = Buffer.alloc(5);
+  const fd = fs.openSync(filePath, 'r');
+  try { fs.readSync(fd, buf, 0, 5, 0); } finally { fs.closeSync(fd); }
+  if (buf.toString('latin1', 0, 5) === '%PDF-') return { ext: '.pdf', mime: 'application/pdf' };
+  if (buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return { ext: '.jpg', mime: 'image/jpeg' };
+  return null;
+}
+
+function removeFileQuietly(p) {
+  if (p) fs.unlink(p, () => {});
+}
+
+// Middleware: przyjmuje opcjonalne pole "cv" i zwraca czytelny błąd JSON
+function cvUpload(req, res, next) {
+  cvUploader.single('cv')(req, res, err => {
+    if (!err) return next();
+    if (err.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: 'Plik z CV jest za duży (max 5 MB).' });
+    if (err.message === 'CV_INVALID_TYPE') return res.status(400).json({ error: 'CV musi być plikiem PDF lub JPG.' });
+    console.error('Upload error:', err.message);
+    return res.status(400).json({ error: 'Nie udało się przesłać pliku z CV.' });
+  });
+}
 
 // ── SECURITY HEADERS (helmet) ─────────────────────────────────────
 app.use(helmet({
@@ -137,7 +184,7 @@ function loadCandidates(recruitmentId) {
   try { return JSON.parse(fs.readFileSync(candFile(recruitmentId), 'utf8')); }
   catch { return []; }
 }
-function saveCandidate(recruitmentId, data) {
+function saveCandidate(recruitmentId, data, cv) {
   const list = loadCandidates(recruitmentId);
   // Zapisujemy TYLKO znane pola — nie cały req.body
   const entry = {
@@ -172,6 +219,8 @@ function saveCandidate(recruitmentId, data) {
     sytuacja_sniadanie: String(data.sytuacja_sniadanie || '').slice(0, 3000),
     dodatkowe:     String(data.dodatkowe || '').slice(0, 2000),
     zrodlo:        String(data.zrodlo || '').slice(0, 50),
+    // CV: tylko metadane — sam plik leży w data/cv/<file>
+    cv:            cv ? { file: cv.file, name: cv.name, size: cv.size } : null,
   };
   list.unshift(entry);
   fs.writeFileSync(candFile(recruitmentId), JSON.stringify(list, null, 2));
@@ -225,6 +274,7 @@ function buildRecruiterEmail(data, rec) {
 <div class="row"><span class="lbl">Wiek</span><span class="val">${esc(data.wiek)} lat</span></div>
 <div class="row"><span class="lbl">Uczeń / student</span><span class="val">${esc(data.student)}</span></div>
 ${data.szkola ? `<div class="row"><span class="lbl">Szkoła</span><span class="val">${esc(data.szkola)}</span></div>` : ''}
+${data.cv ? `<div class="row"><span class="lbl">CV</span><span class="val">w załączniku (${esc(data.cv.name)})</span></div>` : ''}
 </div>
 <div class="sec"><div class="st">Motywacja</div>
 <div class="q">O sobie i dlaczego cukru.cafe</div><div class="ans">${esc(data.o_sobie)}</div>
@@ -380,11 +430,22 @@ app.get('/r/:slug', (req, res) => {
 });
 
 // ── SUBMIT ────────────────────────────────────────────────────────
-app.post('/submit/:recruitmentId', submitLimiter, async (req, res) => {
-  const rec = getRecruitment(req.params.recruitmentId);
-  if (!rec || !rec.active) return res.status(404).json({ error: 'Nie znaleziono rekrutacji' });
+// Formularz wysyła multipart: pole "payload" (JSON z odpowiedziami) + opcjonalny plik "cv".
+// Zwykły JSON (stara wersja formularza w cache przeglądarki) nadal działa.
+app.post('/submit/:recruitmentId', submitLimiter, cvUpload, async (req, res) => {
+  const uploadedPath = req.file ? req.file.path : null;
+  // Każde wyjście z błędem musi posprzątać plik, który multer już zapisał
+  const fail = (status, body) => { removeFileQuietly(uploadedPath); return res.status(status).json(body); };
 
-  const data = req.body;
+  const rec = getRecruitment(req.params.recruitmentId);
+  if (!rec || !rec.active) return fail(404, { error: 'Nie znaleziono rekrutacji' });
+
+  let data = req.body;
+  if (typeof req.body.payload === 'string') {
+    try { data = JSON.parse(req.body.payload); }
+    catch { return fail(400, { error: 'Nieprawidłowe dane formularza.' }); }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return fail(400, { error: 'Nieprawidłowe dane formularza.' });
+  }
 
   // Walidacja pól wymaganych
   const required = ['imie_nazwisko','telefon','email','wiek','student',
@@ -392,13 +453,37 @@ app.post('/submit/:recruitmentId', submitLimiter, async (req, res) => {
     'angielski','niemiecki','czeski',
     'napoj','sytuacja_kawa','sytuacja_sniadanie','rodo'];
   const missing = required.filter(f => !data[f] || data[f].toString().trim() === '');
-  if (missing.length) return res.status(400).json({ error: 'Wypełnij wszystkie wymagane pola.', missing });
+  if (missing.length) return fail(400, { error: 'Wypełnij wszystkie wymagane pola.', missing });
 
   // Walidacja formatu
-  if (!isValidEmail(data.email)) return res.status(400).json({ error: 'Nieprawidłowy adres e-mail.' });
-  if (!isValidAge(data.wiek)) return res.status(400).json({ error: 'Nieprawidłowy wiek.' });
+  if (!isValidEmail(data.email)) return fail(400, { error: 'Nieprawidłowy adres e-mail.' });
+  if (!isValidAge(data.wiek)) return fail(400, { error: 'Nieprawidłowy wiek.' });
 
-  const entry = saveCandidate(rec.id, data);
+  // CV (opcjonalne): sprawdzamy prawdziwą zawartość pliku i nadajemy mu bezpieczną nazwę
+  let cv = null;
+  if (req.file) {
+    const type = detectCvType(req.file.path);
+    if (!type) return fail(400, { error: 'CV musi być prawdziwym plikiem PDF lub JPG.' });
+    const finalFile = path.basename(req.file.filename, '.upload') + type.ext;
+    try {
+      fs.renameSync(req.file.path, path.join(CV_DIR, finalFile));
+    } catch (err) {
+      console.error('CV rename error:', err.message);
+      return fail(500, { error: 'Nie udało się zapisać pliku z CV.' });
+    }
+    const baseName = ('CV - ' + String(data.imie_nazwisko))
+      .replace(/[^\p{L}\p{N} ._-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 100);
+    cv = { file: finalFile, name: baseName + type.ext, size: req.file.size, mime: type.mime };
+  }
+
+  let entry;
+  try {
+    entry = saveCandidate(rec.id, data, cv);
+  } catch (err) {
+    console.error('Save error:', err.message);
+    if (cv) removeFileQuietly(path.join(CV_DIR, cv.file));
+    return res.status(500).json({ error: 'Nie udało się zapisać zgłoszenia.' });
+  }
 
   try {
     const t = createTransporter();
@@ -407,6 +492,7 @@ app.post('/submit/:recruitmentId', submitLimiter, async (req, res) => {
       to: process.env.MAIL_TO,
       subject: `Nowe zgłoszenie [${rec.name}]: ${entry.imie_nazwisko}`,
       html: buildRecruiterEmail(entry, rec),
+      attachments: cv ? [{ filename: cv.name, path: path.join(CV_DIR, cv.file), contentType: cv.mime }] : [],
     });
     await t.sendMail({
       from: `"cukru.cafe" <${process.env.SMTP_USER}>`,
@@ -552,11 +638,41 @@ app.get('/admin/candidates', requireAuth, adminLimiter, (req, res) => {
   res.json(all);
 });
 
+// Nazwy plików CV nadaje wyłącznie serwer — przed użyciem sprawdzamy wzorzec (ochrona przed path traversal)
+const CV_FILE_RE = /^[a-f0-9]{32}\.(pdf|jpg)$/;
+
+function findCandidate(id) {
+  for (const r of loadRecruitments()) {
+    const c = loadCandidates(r.id).find(x => x.id === id);
+    if (c) return c;
+  }
+  return null;
+}
+
+// Pobranie / podgląd CV — tylko dla zalogowanego admina
+app.get('/admin/candidates/:id/cv', requireAuth, adminLimiter, (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: 'Nieprawidłowe ID' });
+  const c = findCandidate(id);
+  if (!c || !c.cv || !CV_FILE_RE.test(c.cv.file)) return res.status(404).json({ error: 'Brak CV' });
+  const full = path.join(CV_DIR, c.cv.file);
+  if (!fs.existsSync(full)) return res.status(404).json({ error: 'Plik CV nie istnieje' });
+  const disposition = req.query.download === '1' ? 'attachment' : 'inline';
+  res.setHeader('Content-Disposition', `${disposition}; filename*=UTF-8''${encodeURIComponent(c.cv.name || 'CV')}`);
+  res.setHeader('Content-Type', c.cv.file.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.sendFile(full);
+});
+
 app.delete('/admin/candidates/:id', requireAuth, adminLimiter, (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: 'Nieprawidłowe ID' });
   loadRecruitments().forEach(r => {
-    const list = loadCandidates(r.id).filter(c => c.id !== id);
+    const all = loadCandidates(r.id);
+    // Usuwamy też plik CV, żeby dane osobowe nie zostawały na dysku po skasowaniu zgłoszenia
+    all.filter(c => c.id === id && c.cv && CV_FILE_RE.test(c.cv.file))
+       .forEach(c => removeFileQuietly(path.join(CV_DIR, c.cv.file)));
+    const list = all.filter(c => c.id !== id);
     fs.writeFileSync(candFile(r.id), JSON.stringify(list, null, 2));
   });
   res.json({ success: true });
