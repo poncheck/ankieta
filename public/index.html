@@ -41,6 +41,9 @@
     }
     input:focus, textarea:focus, select:focus { border-color: #1a1a1a; background: #fff; }
     textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+    input[type="file"] { width: 100%; padding: 10px 14px; border: 1px dashed #ccc; border-radius: 8px; font-size: 13px; font-family: inherit; background: #fafafa; color: #444; cursor: pointer; }
+    input[type="file"]::file-selector-button { margin-right: 12px; padding: 6px 14px; border: none; border-radius: 6px; background: #1a1a1a; color: #f2ede8; font-family: inherit; font-size: 13px; cursor: pointer; }
+    .file-error { display: none; color: #c0392b; font-size: 12px; margin-top: 6px; }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .checkbox-group, .radio-group { display: flex; flex-direction: column; gap: 10px; }
     .checkbox-group label, .radio-group label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 400; cursor: pointer; padding: 8px 12px; border-radius: 8px; border: 1px solid #ececec; transition: background .1s; margin: 0; }
@@ -137,6 +140,11 @@
     <div class="field">
       <label>Opisz swoje dotychczasowe doświadczenie zawodowe<span class="hint">Kawiarnia, gastronomia, handel, obsługa klienta – każde się liczy</span></label>
       <textarea name="doswiadczenie"></textarea>
+    </div>
+    <div class="field">
+      <label for="cv-input">Dołącz CV<span class="hint">Opcjonalnie – plik PDF lub JPG, maks. 5 MB</span></label>
+      <input type="file" id="cv-input" name="cv" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg">
+      <div class="file-error" id="cv-error"></div>
     </div>
     <div class="field">
       <label>Z czym masz już doświadczenie?</label>
@@ -309,19 +317,44 @@ function showToast(msg, isError = false) {
   t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 4000);
 }
 
+const CV_MAX_BYTES = 5 * 1024 * 1024;
+
+// Sprawdza wybrany plik CV po stronie przeglądarki (serwer i tak weryfikuje to ponownie)
+function validateCvFile(file) {
+  if (!file || !file.size) return '';
+  const okType = ['application/pdf', 'image/jpeg'].includes(file.type) || /\.(pdf|jpe?g)$/i.test(file.name);
+  if (!okType) return 'CV musi być plikiem PDF lub JPG.';
+  if (file.size > CV_MAX_BYTES) return 'Plik jest za duży (max 5 MB).';
+  return '';
+}
+
+document.getElementById('cv-input').addEventListener('change', e => {
+  const msg = validateCvFile(e.target.files[0]);
+  const box = document.getElementById('cv-error');
+  box.textContent = msg; box.style.display = msg ? 'block' : 'none';
+  if (msg) e.target.value = '';
+});
+
 document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = document.getElementById('submit-btn');
+  const cvFile = document.getElementById('cv-input').files[0];
+  const cvMsg = validateCvFile(cvFile);
+  if (cvMsg) { showToast(cvMsg, true); return; }
   btn.disabled = true; btn.textContent = 'Wysyłam...';
   const fd = new FormData(e.target);
+  fd.delete('cv'); // plik idzie osobno, poza JSON-em z odpowiedziami
   const data = Object.fromEntries(fd.entries());
   data.umiejetnosci_lista = collectCheckboxes('umiejetnosci_lista');
   data.preferowane_godziny = collectCheckboxes('preferowane_godziny');
   data.dyspozycyjnosc = collectCheckboxes('dyspozycyjnosc');
+  const body = new FormData();
+  body.append('payload', JSON.stringify(data));
+  if (cvFile && cvFile.size) body.append('cv', cvFile);
   try {
-    const r = await fetch(`/submit/${currentRecruitment.id}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
-    });
+    // Bez ręcznego Content-Type — przeglądarka sama ustawi multipart z boundary
+    const r = await fetch(`/submit/${currentRecruitment.id}`, { method: 'POST', body });
+    if (r.status === 413) { showToast('Plik jest za duży (max 5 MB).', true); btn.disabled = false; btn.textContent = 'Wyślij zgłoszenie'; return; }
     const result = await r.json();
     if (result.success) {
       document.getElementById('form').style.display = 'none';

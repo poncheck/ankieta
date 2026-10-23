@@ -650,7 +650,7 @@ function renderCandidates() {
         <button class="star-btn ${c.starred?'starred':''}" onclick="toggleStar(${c.id})" title="${c.starred?'Usuń gwiazdkę':'Dodaj gwiazdkę'}">${c.starred?'★':'☆'}</button>
       </td>
       <td><div class="name-cell"><div class="avatar">${initials(c.imie_nazwisko||'?')}</div><div>
-        <div class="name-main">${c.imie_nazwisko}</div>
+        <div class="name-main">${c.imie_nazwisko}${c.cv?` <a href="/admin/candidates/${c.id}/cv" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Otwórz CV" style="text-decoration:none">📎</a>`:''}</div>
         <div class="name-sub">${c.wiek} lat &middot; ${c.student==='Tak'?'student':'—'}</div>
       </div></div></td>
       <td><span class="badge">${recName(c.recruitmentId)}</span></td>
@@ -803,6 +803,7 @@ function openCandModal(id) {
       <div class="mrow"><span class="mlbl">Wiek</span><span class="mval">${c.wiek} lat</span></div>
       <div class="mrow"><span class="mlbl">Student</span><span class="mval">${c.student}</span></div>
       ${c.szkola?`<div class="mrow"><span class="mlbl">Szkoła</span><span class="mval">${c.szkola}</span></div>`:''}
+      ${c.cv?`<div class="mrow"><span class="mlbl">CV</span><span class="mval"><a href="/admin/candidates/${c.id}/cv" target="_blank" rel="noopener">📎 Otwórz</a> &middot; <a href="/admin/candidates/${c.id}/cv?download=1">Pobierz</a> <span style="color:#aaa;font-size:12px">(${Math.max(1, Math.round((c.cv.size||0)/1024))} KB)</span></span></div>`:''}
     </div>
     <div class="msec"><div class="msec-title">Motywacja</div>
       <div class="mq">O sobie</div><div class="mans">${c.o_sobie}</div>
