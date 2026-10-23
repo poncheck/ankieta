@@ -60,6 +60,22 @@ npm install
 node server.js
 ```
 
+## Dane aplikacji (poza gitem)
+
+Wszystko, co zapisuje aplikacja, leży w katalogu `data/` (w Dockerze zamontowanym jako wolumen) i **nie jest śledzone przez gita**, bo zawiera dane osobowe kandydatów:
+
+- `data/candidates-<id>.json` – zgłoszenia
+- `data/cv/` – przesłane CV (PDF/JPG)
+- `data/recruitments.json` – definicje rekrutacji
+
+Na świeżej instalacji katalog jest pusty. Pierwszą rekrutację można utworzyć w panelu admina (`/admin`) albo zacząć od gotowego przykładu:
+
+```bash
+mkdir -p data && cp examples/recruitments.example.json data/recruitments.json
+```
+
+Pamiętaj o kopii zapasowej katalogu `data/` — to jedyne miejsce, gdzie te dane istnieją.
+
 ## Co się dzieje po wysłaniu formularza?
 
 1. Kandydat wypełnia formularz na stronie
